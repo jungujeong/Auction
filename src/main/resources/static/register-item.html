@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>물건 등록 - 중고경매</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="navbar">
+        <div class="container">
+            <a href="/auction/" class="logo">중고경매</a>
+            <nav>
+                <ul>
+                    <li><a href="/auction/">홈</a></li>
+                    <li><a href="/auction/items.html">경매 목록</a></li>
+                    <li><a href="/auction/register-item.html">물건 등록</a></li>
+                    <li><a href="/auction/login.html">로그인</a></li>
+                    <li><a href="/auction/signup.html">회원가입</a></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="card" style="max-width: 600px; margin: 3rem auto;">
+            <h2>물건 등록</h2>
+            <form id="registerItemForm">
+                <div class="form-group">
+                    <label for="title">제목</label>
+                    <input type="text" id="title" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="category">카테고리</label>
+                    <select id="category" name="category" required>
+                        <option value="">선택하세요</option>
+                        <option value="electronics">전자기기</option>
+                        <option value="furniture">가구/인테리어</option>
+                        <option value="fashion">의류/패션</option>
+                        <option value="sports">스포츠/레저</option>
+                        <option value="books">도서</option>
+                        <option value="hobby">취미/게임</option>
+                        <option value="etc">기타</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="description">설명</label>
+                    <textarea id="description" name="description" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="startPrice">시작 가격</label>
+                    <input type="number" id="startPrice" name="startPrice" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="auctionEndTime">경매 종료 시간</label>
+                    <input type="datetime-local" id="auctionEndTime" name="auctionEndTime" required>
+                </div>
+                <div class="form-group">
+                    <label for="images">이미지 업로드</label>
+                    <input type="file" id="images" name="images" multiple accept="image/*">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">등록하기</button>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 중고경매</p>
+        </div>
+    </footer>
+</body>
+</html>
