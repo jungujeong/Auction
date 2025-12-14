@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>중고경매</title>
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/auction/css/style.css">
 </head>
 <body>
     <div class="navbar">
@@ -15,15 +15,34 @@
                     <li><a href="/auction/">홈</a></li>
                     <li><a href="/auction/items.html">경매 목록</a></li>
                     <li><a href="/auction/register-item.html">물건 등록</a></li>
-                    <li><a href="/auction/login.html">로그인</a></li>
-                    <li><a href="/auction/signup.html">회원가입</a></li>
+                    <li id="loginLink"><a href="/auction/login.html">로그인</a></li>
+                    <li id="signupLink"><a href="/auction/signup.html">회원가입</a></li>
+                    <li id="userInfo" style="display: none;"><span id="usernameDisplay"></span></li>
+                    <li id="logoutLink" style="display: none;"><a href="#" onclick="logout()">로그아웃</a></li>
                 </ul>
             </nav>
         </div>
     </div>
 
+    <!-- 히어로 섹션 -->
+    <div class="hero-section">
+        <div class="container">
+            <h1>중고경매</h1>
+            <p>실시간 경매로 합리적인 가격에</p>
+            <div class="hero-buttons">
+                <a href="/auction/items.html" class="btn btn-primary">경매 보기</a>
+                <a href="/auction/register-item.html" class="btn btn-success">판매하기</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 최근 경매 목록 -->
     <div class="container">
-        <h1 class="text-center mt-4">메인 페이지</h1>
+        <h2 class="section-title">최근 경매</h2>
+        <div class="grid" id="recentItems">
+            <!-- JavaScript로 동적 로드 -->
+            <p class="text-center">경매 상품을 불러오는 중...</p>
+        </div>
     </div>
 
     <footer>
@@ -31,5 +50,36 @@
             <p>&copy; 2024 중고경매</p>
         </div>
     </footer>
+
+    <script>
+        // 페이지 로드 시 로그인 상태 확인
+        window.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            const username = localStorage.getItem('username');
+
+            if (token && username) {
+                // 로그인 상태
+                document.getElementById('loginLink').style.display = 'none';
+                document.getElementById('signupLink').style.display = 'none';
+                document.getElementById('userInfo').style.display = 'block';
+                document.getElementById('logoutLink').style.display = 'block';
+                document.getElementById('usernameDisplay').textContent = username + '님';
+            } else {
+                // 로그아웃 상태
+                document.getElementById('loginLink').style.display = 'block';
+                document.getElementById('signupLink').style.display = 'block';
+                document.getElementById('userInfo').style.display = 'none';
+                document.getElementById('logoutLink').style.display = 'none';
+            }
+        });
+
+        // 로그아웃 함수
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            alert('로그아웃 되었습니다.');
+            window.location.reload();
+        }
+    </script>
 </body>
 </html>
