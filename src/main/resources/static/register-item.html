@@ -57,7 +57,8 @@
                 </div>
                 <div class="form-group">
                     <label for="images">이미지 업로드</label>
-                    <input type="file" id="images" name="images" multiple accept="image/*">
+                    <input type="file" id="images" name="images" accept="image/*">
+                    <div id="imagePreview" style="margin-top: 10px;"></div>
                 </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%;">등록하기</button>
             </form>
@@ -69,5 +70,101 @@
             <p>&copy; 2024 중고경매</p>
         </div>
     </footer>
+
+    <script>
+        // 로그인 체크
+        window.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('로그인이 필요합니다.');
+                window.location.href = '/auction/login.html';
+            }
+        });
+
+        // 이미지 미리보기
+        document.getElementById('images').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const previewDiv = document.getElementById('imagePreview');
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewDiv.innerHTML = `
+                        <img src="${e.target.result}"
+                             alt="미리보기"
+                             style="max-width: 300px; max-height: 300px; border: 1px solid #ddd; border-radius: 4px; padding: 5px;">
+                    `;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                previewDiv.innerHTML = '';
+            }
+        });
+
+        // 물건 등록
+        document.getElementById('registerItemForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const token = localStorage.getItem('token');
+            const title = document.getElementById('title').value;
+            const description = document.getElementById('description').value;
+            const startPrice = parseInt(document.getElementById('startPrice').value);
+            const endTime = document.getElementById('auctionEndTime').value;
+            const imageFileInput = document.getElementById('images');
+            let imageUrl = null;
+
+            try {
+                // 1단계: 이미지가 선택되었다면 먼저 업로드
+                if (imageFileInput.files && imageFileInput.files.length > 0) {
+                    const imageFile = imageFileInput.files[0];
+                    const formData = new FormData();
+                    formData.append('file', imageFile);
+
+                    const uploadResponse = await fetch('/auction/api/upload/image', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': 'Bearer ' + token
+                        },
+                        body: formData
+                    });
+
+                    if (uploadResponse.ok) {
+                        const uploadResult = await uploadResponse.json();
+                        imageUrl = uploadResult.url;
+                    } else {
+                        const error = await uploadResponse.text();
+                        alert('이미지 업로드 실패: ' + error);
+                        return;
+                    }
+                }
+
+                // 2단계: 물건 정보와 함께 이미지 URL을 서버에 전송
+                const response = await fetch('/auction/api/items', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({
+                        title: title,
+                        description: description,
+                        startPrice: startPrice,
+                        endTime: endTime,
+                        imageUrl: imageUrl
+                    })
+                });
+
+                if (response.ok) {
+                    alert('물건이 등록되었습니다!');
+                    window.location.href = '/auction/items.html';
+                } else {
+                    const error = await response.text();
+                    alert('등록 실패: ' + error);
+                }
+            } catch (error) {
+                alert('오류가 발생했습니다: ' + error);
+            }
+        });
+    </script>
 </body>
 </html>

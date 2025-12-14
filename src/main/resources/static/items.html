@@ -23,10 +23,10 @@
     </div>
 
     <div class="container">
-        <h1 class="mt-4">경매 목록</h1>
+        <h1 class="section-title mt-4">경매 목록</h1>
 
-        <div class="grid mt-3" id="itemList">
-            <!-- 경매 목록이 여기에 표시됩니다 -->
+        <div class="grid" id="itemList">
+            <p class="text-center">경매 목록을 불러오는 중...</p>
         </div>
     </div>
 
@@ -35,5 +35,78 @@
             <p>&copy; 2024 중고경매</p>
         </div>
     </footer>
+
+    <script>
+        // 경매 목록 불러오기
+        async function loadItems() {
+            try {
+                const response = await fetch('/auction/api/items/active');
+
+                if (response.ok) {
+                    const items = await response.json();
+                    displayItems(items);
+                } else {
+                    document.getElementById('itemList').innerHTML =
+                        '<p class="text-center">경매 목록을 불러오는데 실패했습니다.</p>';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('itemList').innerHTML =
+                    '<p class="text-center">오류가 발생했습니다.</p>';
+            }
+        }
+
+        // 경매 목록 표시
+        function displayItems(items) {
+            const itemList = document.getElementById('itemList');
+
+            if (items.length === 0) {
+                itemList.innerHTML = '<p class="text-center">등록된 경매가 없습니다.</p>';
+                return;
+            }
+
+            itemList.innerHTML = items.map(item => `
+                <div class="item-card">
+                    <img src="${item.imageUrl || 'https://via.placeholder.com/300x200?text=No+Image'}"
+                         alt="${item.title}">
+                    <div class="item-card-content">
+                        <h3>${item.title}</h3>
+                        <p class="price">${formatPrice(item.currentPrice)}원</p>
+                        <p class="meta">
+                            시작가: ${formatPrice(item.startPrice)}원<br>
+                            판매자: ${item.sellerName}<br>
+                            종료: ${formatDateTime(item.endTime)}
+                        </p>
+                        <span class="status ${item.status.toLowerCase()}">${getStatusText(item.status)}</span>
+                        <a href="/auction/auction-detail.html?id=${item.id}" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">상세보기</a>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 가격 포맷팅
+        function formatPrice(price) {
+            return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+
+        // 날짜 포맷팅
+        function formatDateTime(dateTime) {
+            const date = new Date(dateTime);
+            return date.toLocaleString('ko-KR');
+        }
+
+        // 상태 텍스트
+        function getStatusText(status) {
+            const statusMap = {
+                'ACTIVE': '진행중',
+                'ENDED': '종료',
+                'SOLD': '판매완료'
+            };
+            return statusMap[status] || status;
+        }
+
+        // 페이지 로드 시 실행
+        window.addEventListener('DOMContentLoaded', loadItems);
+    </script>
 </body>
 </html>

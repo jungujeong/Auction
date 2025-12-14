@@ -42,12 +42,14 @@ public class SecurityConfig {
             )
             .authorizeHttpRequests(auth -> auth
                 // 정적 리소스는 모두 허용
-                .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
+                .requestMatchers("/css/**", "/js/**", "/images/**", "/uploads/**").permitAll()
                 // 회원가입, 로그인 API는 모두 허용
                 .requestMatchers("/api/users/signup", "/api/users/login").permitAll()
+                // 경매 조회 API는 인증 없이 허용 (누구나 목록 볼 수 있음)
+                .requestMatchers("/api/items", "/api/items/**").permitAll()
                 // 모든 HTML 페이지는 접근 허용 (JWT는 JavaScript에서 확인)
                 .requestMatchers("/**/*.html", "/").permitAll()
-                // API는 인증 필요
+                // 나머지 API는 인증 필요
                 .requestMatchers("/api/**").authenticated()
                 // 나머지는 허용
                 .anyRequest().permitAll()
