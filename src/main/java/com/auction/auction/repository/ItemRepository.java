@@ -17,8 +17,8 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     // 판매자별 조회
     List<Item> findBySellerId(Long sellerId);
 
-    // 최신순 조회
-    List<Item> findAllByOrderByCreatedAtDesc();
+    // 최신순 조회 (DELETED 제외)
+    List<Item> findByStatusNotOrderByCreatedAtDesc(ItemStatus status);
 
     // 진행 중인 경매 최신순 조회
     List<Item> findByStatusOrderByCreatedAtDesc(ItemStatus status);

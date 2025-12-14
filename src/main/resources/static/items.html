@@ -15,8 +15,10 @@
                     <li><a href="/auction/">홈</a></li>
                     <li><a href="/auction/items.html">경매 목록</a></li>
                     <li><a href="/auction/register-item.html">물건 등록</a></li>
-                    <li><a href="/auction/login.html">로그인</a></li>
-                    <li><a href="/auction/signup.html">회원가입</a></li>
+                    <li id="loginLink"><a href="/auction/login.html">로그인</a></li>
+                    <li id="signupLink"><a href="/auction/signup.html">회원가입</a></li>
+                    <li id="userInfo" style="display: none;"><span id="usernameDisplay"></span></li>
+                    <li id="logoutLink" style="display: none;"><a href="#" onclick="logout()">로그아웃</a></li>
                 </ul>
             </nav>
         </div>
@@ -37,6 +39,36 @@
     </footer>
 
     <script>
+        // 페이지 로드 시 로그인 상태 확인
+        let currentUsername = null;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            const username = localStorage.getItem('username');
+
+            if (token && username) {
+                currentUsername = username;
+                document.getElementById('loginLink').style.display = 'none';
+                document.getElementById('signupLink').style.display = 'none';
+                document.getElementById('userInfo').style.display = 'block';
+                document.getElementById('logoutLink').style.display = 'block';
+                document.getElementById('usernameDisplay').textContent = username + '님';
+            } else {
+                document.getElementById('loginLink').style.display = 'block';
+                document.getElementById('signupLink').style.display = 'block';
+                document.getElementById('userInfo').style.display = 'none';
+                document.getElementById('logoutLink').style.display = 'none';
+            }
+        });
+
+        // 로그아웃
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            alert('로그아웃 되었습니다.');
+            window.location.reload();
+        }
+
         // 경매 목록 불러오기
         async function loadItems() {
             try {
@@ -65,23 +97,61 @@
                 return;
             }
 
-            itemList.innerHTML = items.map(item => `
-                <div class="item-card">
-                    <img src="${item.imageUrl || 'https://via.placeholder.com/300x200?text=No+Image'}"
-                         alt="${item.title}">
-                    <div class="item-card-content">
-                        <h3>${item.title}</h3>
-                        <p class="price">${formatPrice(item.currentPrice)}원</p>
-                        <p class="meta">
-                            시작가: ${formatPrice(item.startPrice)}원<br>
-                            판매자: ${item.sellerName}<br>
-                            종료: ${formatDateTime(item.endTime)}
-                        </p>
-                        <span class="status ${item.status.toLowerCase()}">${getStatusText(item.status)}</span>
-                        <a href="/auction/auction-detail.html?id=${item.id}" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">상세보기</a>
+            itemList.innerHTML = items.map(item => {
+                // 본인이 등록한 물건인지 확인
+                const isMine = currentUsername && item.sellerName === currentUsername;
+
+                return `
+                    <div class="item-card">
+                        <img src="${item.imageUrl || 'https://via.placeholder.com/300x200?text=No+Image'}"
+                             alt="${item.title}">
+                        <div class="item-card-content">
+                            <h3>${item.title}</h3>
+                            <p class="price">${formatPrice(item.currentPrice)}원</p>
+                            <p class="meta">
+                                시작가: ${formatPrice(item.startPrice)}원<br>
+                                판매자: ${item.sellerName}<br>
+                                종료: ${formatDateTime(item.endTime)}
+                            </p>
+                            <span class="status ${item.status.toLowerCase()}">${getStatusText(item.status)}</span>
+                            <a href="/auction/auction-detail.html?id=${item.id}" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">상세보기</a>
+                            ${isMine ? `<button onclick="deleteItem(${item.id})" class="btn btn-danger" style="width: 100%; margin-top: 0.5rem;">삭제하기</button>` : ''}
+                        </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
+        }
+
+        // 물건 삭제
+        async function deleteItem(itemId) {
+            if (!confirm('정말 삭제하시겠습니까?')) {
+                return;
+            }
+
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('로그인이 필요합니다.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/auction/api/items/${itemId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+
+                if (response.ok) {
+                    alert('물건이 삭제되었습니다.');
+                    loadItems(); // 목록 새로고침
+                } else {
+                    const error = await response.text();
+                    alert('삭제 실패: ' + error);
+                }
+            } catch (error) {
+                alert('오류가 발생했습니다: ' + error);
+            }
         }
 
         // 가격 포맷팅

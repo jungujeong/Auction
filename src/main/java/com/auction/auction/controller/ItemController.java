@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -91,6 +92,19 @@ public class ItemController {
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(response);
+    }
+
+    // 물건 삭제
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteItem(
+            @PathVariable("id") Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            itemService.deleteItem(id, userDetails.getUsername());
+            return ResponseEntity.ok("물건이 삭제되었습니다.");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     // Entity -> DTO 변환

@@ -68,6 +68,7 @@ public class Item {
     public enum ItemStatus {
         ACTIVE,   // 경매 진행 중
         ENDED,    // 경매 종료
-        SOLD      // 판매 완료
+        SOLD,     // 판매 완료
+        DELETED   // 삭제됨
     }
 }

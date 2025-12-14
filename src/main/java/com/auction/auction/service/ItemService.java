@@ -31,9 +31,9 @@ public class ItemService {
         return itemRepository.save(item);
     }
 
-    // 전체 목록 조회
+    // 전체 목록 조회 (DELETED 제외)
     public List<Item> getAllItems() {
-        return itemRepository.findAllByOrderByCreatedAtDesc();
+        return itemRepository.findByStatusNotOrderByCreatedAtDesc(ItemStatus.DELETED);
     }
 
     // 진행 중인 경매 목록 조회
@@ -53,5 +53,21 @@ public class ItemService {
             .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         return itemRepository.findBySellerId(user.getId());
+    }
+
+    // 물건 삭제 (상태 변경)
+    @Transactional
+    public void deleteItem(Long itemId, String username) {
+        Item item = itemRepository.findById(itemId)
+            .orElseThrow(() -> new IllegalArgumentException("경매 물건을 찾을 수 없습니다."));
+
+        // 판매자 본인인지 확인
+        if (!item.getSeller().getUsername().equals(username)) {
+            throw new IllegalArgumentException("본인이 등록한 물건만 삭제할 수 있습니다.");
+        }
+
+        // 상태를 DELETED로 변경
+        item.setStatus(ItemStatus.DELETED);
+        itemRepository.save(item);
     }
 }
