@@ -75,8 +75,27 @@
                     alert('로그인 성공!');
                     window.location.href = '/auction/';
                 } else {
-                    const error = await response.text();
-                    alert('로그인 실패: ' + error);
+                    // JSON 응답 파싱 시도
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const errorData = await response.json();
+
+                        // 유효성 검사 에러인 경우
+                        if (errorData.errors) {
+                            let errorMessage = errorData.message + '\n\n';
+                            for (const [field, message] of Object.entries(errorData.errors)) {
+                                errorMessage += `• ${message}\n`;
+                            }
+                            alert(errorMessage);
+                        } else {
+                            // 일반 에러
+                            alert('로그인 실패: ' + errorData.message);
+                        }
+                    } else {
+                        // 텍스트 응답
+                        const error = await response.text();
+                        alert('로그인 실패: ' + error);
+                    }
                 }
             } catch (error) {
                 alert('오류가 발생했습니다: ' + error);

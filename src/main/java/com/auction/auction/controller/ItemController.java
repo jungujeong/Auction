@@ -18,6 +18,7 @@ import com.auction.auction.dto.ItemResponse;
 import com.auction.auction.model.Item;
 import com.auction.auction.service.ItemService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -30,7 +31,7 @@ public class ItemController {
     // 물건 등록
     @PostMapping
     public ResponseEntity<?> registerItem(
-            @RequestBody ItemRequest request,
+            @Valid @RequestBody ItemRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
         try {
             Item item = new Item();
