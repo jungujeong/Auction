@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('물건 등록 - 중고경매')}"></head>
+<body>
+    <div th:replace="~{fragments/layout :: navbar}"></div>
+
+    <div class="container">
+        <div class="form-container mt-4">
+            <h1 class="section-title">물건 등록</h1>
+
+            <form id="registerForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="title">제목 *</label>
+                    <input type="text" id="title" name="title" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">설명 *</label>
+                    <textarea id="description" name="description" rows="5" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="startPrice">시작가 (원) *</label>
+                    <input type="number" id="startPrice" name="startPrice" min="0" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="endTime">종료 일시 *</label>
+                    <input type="datetime-local" id="endTime" name="endTime" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="image">이미지</label>
+                    <input type="file" id="image" name="image" accept="image/*">
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">등록하기</button>
+                    <a th:href="@{/}" class="btn btn-secondary">취소</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const imageFile = document.getElementById('image').files[0];
+            let imageUrl = null;
+
+            // 이미지가 있으면 먼저 업로드
+            if (imageFile) {
+                const formData = new FormData();
+                formData.append('file', imageFile);
+
+                try {
+                    const uploadResponse = await fetch('/api/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (uploadResponse.ok) {
+                        const result = await uploadResponse.json();
+                        imageUrl = result.url;
+                    } else {
+                        alert('이미지 업로드에 실패했습니다.');
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Error uploading image:', error);
+                    alert('이미지 업로드 중 오류가 발생했습니다.');
+                    return;
+                }
+            }
+
+            // 물건 등록
+            const itemData = {
+                title: document.getElementById('title').value,
+                description: document.getElementById('description').value,
+                startPrice: parseInt(document.getElementById('startPrice').value),
+                endTime: document.getElementById('endTime').value,
+                imageUrl: imageUrl
+            };
+
+            try {
+                const response = await fetch('/api/items', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(itemData)
+                });
+
+                if (response.ok) {
+                    alert('물건이 등록되었습니다.');
+                    window.location.href = '/items';
+                } else {
+                    const error = await response.text();
+                    alert('등록 실패: ' + error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('오류가 발생했습니다.');
+            }
+        });
+
+        // 종료일시 최소값을 현재 시간으로 설정
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('endTime').min = now.toISOString().slice(0, 16);
+    </script>
+</body>
+</html>

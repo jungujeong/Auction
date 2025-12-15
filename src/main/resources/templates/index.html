@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('중고경매')}"></head>
+<body>
+    <div th:replace="~{fragments/layout :: navbar}"></div>
+
+    <div class="hero">
+        <div class="container">
+            <h1>중고 물건을 경매로 사고 팔아보세요!</h1>
+            <p>안전하고 투명한 온라인 경매 플랫폼</p>
+            <a th:href="@{/items}" class="btn btn-primary btn-lg">경매 둘러보기</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2 class="section-title">진행 중인 경매</h2>
+
+        <div class="grid" th:if="${items != null and !items.isEmpty()}">
+            <div class="item-card" th:each="item : ${items}"
+                 th:onclick="'location.href=\'/items/' + ${item.id} + '\''"
+                 style="cursor: pointer;">
+                <img th:src="${item.imageUrl != null ? item.imageUrl : 'https://via.placeholder.com/300x200?text=No+Image'}"
+                     th:alt="${item.title}">
+                <div class="item-card-content">
+                    <h3 th:text="${item.title}">물건 제목</h3>
+                    <p class="price" th:text="${#numbers.formatInteger(item.currentPrice, 0, 'COMMA')} + '원'">0원</p>
+                    <p class="meta">
+                        시작가: <span th:text="${#numbers.formatInteger(item.startPrice, 0, 'COMMA')} + '원'">0원</span><br>
+                        판매자: <span th:text="${item.seller.username}">판매자</span><br>
+                        종료: <span th:text="${#temporals.format(item.endTime, 'yyyy-MM-dd HH:mm')}">2024-01-01 00:00</span>
+                    </p>
+                    <span class="status"
+                          th:classappend="${item.status.name() == 'ACTIVE' ? 'active' : (item.status.name() == 'ENDED' ? 'ended' : 'sold')}"
+                          th:text="${item.status.name() == 'ACTIVE' ? '진행중' : (item.status.name() == 'ENDED' ? '종료' : '판매완료')}">
+                        진행중
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <p class="text-center" th:if="${items == null or items.isEmpty()}">
+            등록된 경매가 없습니다.
+        </p>
+    </div>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

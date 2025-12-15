@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head(${item.title} + ' - 중고경매')}"></head>
+<body>
+    <div th:replace="~{fragments/layout :: navbar}"></div>
+
+    <div class="container">
+        <div class="detail-container mt-4">
+            <div class="detail-image">
+                <img th:src="${item.imageUrl != null ? item.imageUrl : 'https://via.placeholder.com/600x400?text=No+Image'}"
+                     th:alt="${item.title}">
+            </div>
+
+            <div class="detail-info">
+                <div class="detail-header">
+                    <h1 th:text="${item.title}">물건 제목</h1>
+                    <span class="status"
+                          th:classappend="${item.status.name() == 'ACTIVE' ? 'active' : (item.status.name() == 'ENDED' ? 'ended' : 'sold')}"
+                          th:text="${item.status.name() == 'ACTIVE' ? '진행중' : (item.status.name() == 'ENDED' ? '종료' : '판매완료')}">
+                        진행중
+                    </span>
+                </div>
+
+                <div class="price-info">
+                    <div class="current-price">
+                        <span>현재가</span>
+                        <strong th:text="${#numbers.formatInteger(item.currentPrice, 0, 'COMMA')} + '원'">0원</strong>
+                    </div>
+                    <div class="start-price">
+                        <span>시작가: </span>
+                        <span th:text="${#numbers.formatInteger(item.startPrice, 0, 'COMMA')} + '원'">0원</span>
+                    </div>
+                </div>
+
+                <div class="item-meta">
+                    <p><strong>판매자:</strong> <span th:text="${item.seller.username}">판매자</span></p>
+                    <p><strong>등록일:</strong> <span th:text="${#temporals.format(item.createdAt, 'yyyy-MM-dd HH:mm')}">2024-01-01 00:00</span></p>
+                    <p><strong>종료일:</strong> <span th:text="${#temporals.format(item.endTime, 'yyyy-MM-dd HH:mm')}">2024-01-01 00:00</span></p>
+                </div>
+
+                <div class="description">
+                    <h3>상품 설명</h3>
+                    <p th:text="${item.description}">상품 설명입니다.</p>
+                </div>
+
+                <!-- 판매자인 경우 삭제 버튼 표시 -->
+                <div th:if="${isSeller}" class="action-buttons">
+                    <button class="btn btn-danger" onclick="deleteItem()">삭제하기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+    <script th:if="${isSeller}">
+        async function deleteItem() {
+            if (!confirm('정말로 이 물건을 삭제하시겠습니까?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/items/' + [[${item.id}]], {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    alert('물건이 삭제되었습니다.');
+                    window.location.href = '/items';
+                } else {
+                    const error = await response.text();
+                    alert('삭제 실패: ' + error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('오류가 발생했습니다.');
+            }
+        }
+    </script>
+</body>
+</html>
