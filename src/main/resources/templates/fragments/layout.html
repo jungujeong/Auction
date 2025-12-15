@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title}">중고경매</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <!-- 네비게이션 바 -->
+    <div th:fragment="navbar" class="navbar">
+        <div class="container">
+            <a th:href="@{/}" class="logo">중고경매</a>
+            <nav>
+                <ul>
+                    <li><a th:href="@{/}">홈</a></li>
+                    <li><a th:href="@{/items}">경매 목록</a></li>
+                    <li><a th:href="@{/items/register}">물건 등록</a></li>
+
+                    <!-- 로그인 안 한 경우 -->
+                    <li sec:authorize="!isAuthenticated()">
+                        <a th:href="@{/login}">로그인</a>
+                    </li>
+                    <li sec:authorize="!isAuthenticated()">
+                        <a th:href="@{/signup}">회원가입</a>
+                    </li>
+
+                    <!-- 로그인 한 경우 -->
+                    <li sec:authorize="isAuthenticated()">
+                        <span sec:authentication="name">사용자</span>님
+                    </li>
+                    <li sec:authorize="isAuthenticated()">
+                        <form th:action="@{/logout}" method="post" style="display: inline;">
+                            <button type="submit" style="background: none; border: none; color: #495057; cursor: pointer; font: inherit; padding: 0.5rem 1rem;">
+                                로그아웃
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    <!-- 푸터 -->
+    <footer th:fragment="footer">
+        <div class="container">
+            <p>&copy; 2024 중고경매</p>
+        </div>
+    </footer>
+</body>
+</html>
