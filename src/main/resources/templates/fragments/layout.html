@@ -31,6 +31,9 @@
                         <span sec:authentication="name">사용자</span>님
                     </li>
                     <li sec:authorize="isAuthenticated()">
+                        <a th:href="@{/profile}">내 프로필</a>
+                    </li>
+                    <li sec:authorize="isAuthenticated()">
                         <form th:action="@{/logout}" method="post" style="display: inline;">
                             <button type="submit" style="background: none; border: none; color: #495057; cursor: pointer; font: inherit; padding: 0.5rem 1rem;">
                                 로그아웃

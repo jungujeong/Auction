@@ -44,8 +44,9 @@
                     <p th:text="${item.description}">상품 설명입니다.</p>
                 </div>
 
-                <!-- 판매자인 경우 삭제 버튼 표시 -->
+                <!-- 판매자인 경우 수정/삭제 버튼 표시 -->
                 <div th:if="${isSeller}" class="action-buttons">
+                    <a th:href="@{/items/{id}/edit(id=${item.id})}" class="btn btn-primary">수정하기</a>
                     <button class="btn btn-danger" onclick="deleteItem()">삭제하기</button>
                 </div>
             </div>

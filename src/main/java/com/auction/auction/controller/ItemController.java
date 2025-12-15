@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -92,6 +93,29 @@ public class ItemController {
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(response);
+    }
+
+    // 물건 수정
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateItem(
+            @PathVariable("id") Long id,
+            @Valid @RequestBody ItemRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            Item item = new Item();
+            item.setTitle(request.getTitle());
+            item.setDescription(request.getDescription());
+            item.setStartPrice(request.getStartPrice());
+            item.setImageUrl(request.getImageUrl());
+            item.setEndTime(request.getEndTime());
+
+            Item updatedItem = itemService.updateItem(id, item, userDetails.getUsername());
+
+            ItemResponse response = convertToResponse(updatedItem);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("물건 수정 실패: " + e.getMessage());
+        }
     }
 
     // 물건 삭제

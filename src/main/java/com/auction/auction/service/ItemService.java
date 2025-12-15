@@ -55,6 +55,30 @@ public class ItemService {
         return itemRepository.findBySellerId(user.getId());
     }
 
+    // 물건 수정
+    @Transactional
+    public Item updateItem(Long itemId, Item updatedItem, String username) {
+        Item item = itemRepository.findById(itemId)
+            .orElseThrow(() -> new IllegalArgumentException("경매 물건을 찾을 수 없습니다."));
+
+        // 판매자 본인인지 확인
+        if (!item.getSeller().getUsername().equals(username)) {
+            throw new IllegalArgumentException("본인이 등록한 물건만 수정할 수 있습니다.");
+        }
+
+        // 수정 가능한 필드만 업데이트
+        item.setTitle(updatedItem.getTitle());
+        item.setDescription(updatedItem.getDescription());
+        item.setStartPrice(updatedItem.getStartPrice());
+        item.setEndTime(updatedItem.getEndTime());
+
+        if (updatedItem.getImageUrl() != null) {
+            item.setImageUrl(updatedItem.getImageUrl());
+        }
+
+        return itemRepository.save(item);
+    }
+
     // 물건 삭제 (상태 변경)
     @Transactional
     public void deleteItem(Long itemId, String username) {
