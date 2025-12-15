@@ -15,6 +15,8 @@ public class ItemResponse {
     private Long currentPrice;
     private String imageUrl;
     private String status;
+    private LocalDateTime recruitmentEndTime;
+    private LocalDateTime auctionStartTime;
     private LocalDateTime endTime;
     private String sellerName;
     private LocalDateTime createdAt;

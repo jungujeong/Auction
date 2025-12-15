@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('경매방 - 중고경매')}"></head>
+<body>
+    <div th:replace="~{fragments/layout :: navbar}"></div>
+
+    <div class="container mt-4">
+        <div class="row">
+            <!-- 왼쪽: 물건 정보 -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div id="itemImageContainer"></div>
+                    <div class="card-body">
+                        <h2 id="itemTitle" class="card-title">로딩 중...</h2>
+                        <p id="itemDescription" class="card-text text-muted"></p>
+                        <hr>
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <strong>시작가:</strong>
+                                <p id="startPrice" class="h4 text-primary">-</p>
+                            </div>
+                            <div class="col-6">
+                                <strong>현재가:</strong>
+                                <p id="currentPrice" class="h3 text-success">-</p>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <strong>경매 종료:</strong>
+                            <p id="endTime" class="text-muted">-</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 오른쪽: 입찰 영역 -->
+            <div class="col-md-6">
+                <div class="card mb-3">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">입찰하기</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="bidForm">
+                            <div class="form-group mb-3">
+                                <label for="bidAmount">입찰 가격</label>
+                                <input type="number" class="form-control" id="bidAmount"
+                                       placeholder="현재가보다 높은 금액을 입력하세요" required>
+                                <small class="form-text text-muted">현재가보다 높은 금액을 입력해야 합니다.</small>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100">입찰하기</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- 입찰 내역 -->
+                <div class="card">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0">입찰 내역</h5>
+                    </div>
+                    <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                        <div id="bidHistory">
+                            <p class="text-center text-muted">입찰 내역이 없습니다.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+    <!-- WebSocket 라이브러리 -->
+    <script src="/webjars/sockjs-client/sockjs.min.js"></script>
+    <script src="/webjars/stomp-websocket/stomp.min.js"></script>
+
+    <script th:inline="javascript">
+        const contextPath = /*[[@{/}]]*/ '';
+        const basePath = contextPath.endsWith('/') ? contextPath.slice(0, -1) : contextPath;
+
+        // URL에서 itemId 추출
+        const pathParts = window.location.pathname.split('/');
+        const itemId = pathParts[pathParts.length - 1];
+
+        let stompClient = null;
+        let currentItem = null;
+
+        // WebSocket 연결
+        function connect() {
+            const socket = new SockJS(basePath + '/ws-auction');
+            stompClient = Stomp.over(socket);
+
+            stompClient.connect({}, function(frame) {
+                console.log('Connected: ' + frame);
+
+                // 경매방 입찰 메시지 구독
+                stompClient.subscribe('/topic/auction/' + itemId, function(message) {
+                    const bidMessage = JSON.parse(message.body);
+                    handleBidMessage(bidMessage);
+                });
+            }, function(error) {
+                console.error('WebSocket connection error:', error);
+                setTimeout(connect, 5000); // 5초 후 재연결 시도
+            });
+        }
+
+        // 입찰 메시지 처리
+        function handleBidMessage(bidMessage) {
+            if (bidMessage.success) {
+                // 현재가 업데이트
+                document.getElementById('currentPrice').textContent =
+                    bidMessage.bidAmount.toLocaleString() + '원';
+
+                // 입찰 내역에 추가
+                addBidToHistory(bidMessage);
+            } else {
+                alert('입찰 실패: ' + bidMessage.errorMessage);
+            }
+        }
+
+        // 입찰 내역에 추가
+        function addBidToHistory(bidMessage) {
+            const historyContainer = document.getElementById('bidHistory');
+
+            // 첫 입찰인 경우 안내 메시지 제거
+            if (historyContainer.querySelector('.text-muted')) {
+                historyContainer.innerHTML = '';
+            }
+
+            const bidElement = document.createElement('div');
+            bidElement.className = 'border-bottom pb-2 mb-2';
+            bidElement.innerHTML = `
+                <div class="d-flex justify-content-between">
+                    <strong>${bidMessage.bidderName} (${bidMessage.bidderUsername})</strong>
+                    <span class="text-primary">${bidMessage.bidAmount.toLocaleString()}원</span>
+                </div>
+                <small class="text-muted">${formatBidTime(bidMessage.bidTime)}</small>
+            `;
+
+            // 최신 입찰을 맨 위에 추가
+            historyContainer.insertBefore(bidElement, historyContainer.firstChild);
+        }
+
+        // 입찰 폼 제출
+        document.getElementById('bidForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const bidAmount = parseInt(document.getElementById('bidAmount').value);
+
+            if (!currentItem) {
+                alert('물건 정보를 불러오는 중입니다.');
+                return;
+            }
+
+            if (bidAmount <= currentItem.currentPrice) {
+                alert('입찰가는 현재가보다 높아야 합니다.');
+                return;
+            }
+
+            // WebSocket으로 입찰 메시지 전송
+            if (stompClient && stompClient.connected) {
+                stompClient.send('/app/auction/' + itemId + '/bid', {},
+                    JSON.stringify({ bidAmount: bidAmount }));
+
+                // 입력 필드 초기화
+                document.getElementById('bidAmount').value = '';
+            } else {
+                alert('서버와 연결이 끊어졌습니다. 페이지를 새로고침해주세요.');
+            }
+        });
+
+        // 물건 정보 로드
+        async function loadItemInfo() {
+            try {
+                const response = await fetch(basePath + '/api/items/' + itemId);
+                if (!response.ok) {
+                    throw new Error('Failed to load item');
+                }
+
+                currentItem = await response.json();
+
+                // 물건 정보 표시
+                document.getElementById('itemTitle').textContent = currentItem.title;
+                document.getElementById('itemDescription').textContent = currentItem.description;
+                document.getElementById('startPrice').textContent =
+                    currentItem.startPrice.toLocaleString() + '원';
+                document.getElementById('currentPrice').textContent =
+                    currentItem.currentPrice.toLocaleString() + '원';
+                document.getElementById('endTime').textContent =
+                    new Date(currentItem.endTime).toLocaleString();
+
+                // 이미지 표시
+                if (currentItem.imageUrl) {
+                    document.getElementById('itemImageContainer').innerHTML =
+                        `<img src="${basePath}${currentItem.imageUrl}" class="card-img-top" alt="${currentItem.title}" style="max-height: 400px; object-fit: cover;">`;
+                }
+
+            } catch (error) {
+                console.error('Error loading item:', error);
+                alert('물건 정보를 불러오는데 실패했습니다.');
+            }
+        }
+
+        // 입찰 내역 로드
+        async function loadBidHistory() {
+            try {
+                const response = await fetch(basePath + '/api/auctions/' + itemId + '/bids');
+                if (!response.ok) {
+                    throw new Error('Failed to load bids');
+                }
+
+                const bids = await response.json();
+                const historyContainer = document.getElementById('bidHistory');
+
+                if (bids.length === 0) {
+                    historyContainer.innerHTML = '<p class="text-center text-muted">입찰 내역이 없습니다.</p>';
+                    return;
+                }
+
+                historyContainer.innerHTML = '';
+                bids.forEach(bid => {
+                    const bidElement = document.createElement('div');
+                    bidElement.className = 'border-bottom pb-2 mb-2';
+                    bidElement.innerHTML = `
+                        <div class="d-flex justify-content-between">
+                            <strong>${bid.bidder.name} (${bid.bidder.username})</strong>
+                            <span class="text-primary">${bid.bidAmount.toLocaleString()}원</span>
+                        </div>
+                        <small class="text-muted">${formatBidTime(bid.bidTime)}</small>
+                    `;
+                    historyContainer.appendChild(bidElement);
+                });
+
+            } catch (error) {
+                console.error('Error loading bid history:', error);
+            }
+        }
+
+        function formatBidTime(bidTime) {
+            const date = new Date(bidTime);
+            return date.toLocaleString();
+        }
+
+        // 페이지 로드 시 실행
+        loadItemInfo();
+        loadBidHistory();
+        connect();
+
+        // 페이지 떠날 때 WebSocket 연결 해제
+        window.addEventListener('beforeunload', function() {
+            if (stompClient) {
+                stompClient.disconnect();
+            }
+        });
+    </script>
+</body>
+</html>

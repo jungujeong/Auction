@@ -45,10 +45,16 @@ public class Item {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private ItemStatus status = ItemStatus.ACTIVE;
+    private ItemStatus status = ItemStatus.RECRUITING;
+
+    @Column(name = "recruitment_end_time", nullable = false)
+    private LocalDateTime recruitmentEndTime;  // 참여자 모집 종료 시간 (등록 후 10분)
+
+    @Column(name = "auction_start_time", nullable = false)
+    private LocalDateTime auctionStartTime;    // 경매 시작 시간 (모집 종료와 동시)
 
     @Column(name = "end_time", nullable = false)
-    private LocalDateTime endTime;
+    private LocalDateTime endTime;             // 경매 종료 시간
 
     @ManyToOne
     @JoinColumn(name = "seller_id", nullable = false)
@@ -63,12 +69,21 @@ public class Item {
         if (this.currentPrice == null) {
             this.currentPrice = this.startPrice;
         }
+        // 참여자 모집 종료 시간 = 등록 후 10분
+        if (this.recruitmentEndTime == null) {
+            this.recruitmentEndTime = this.createdAt.plusMinutes(10);
+        }
+        // 경매 시작 시간 = 모집 종료 시간
+        if (this.auctionStartTime == null) {
+            this.auctionStartTime = this.recruitmentEndTime;
+        }
     }
 
     public enum ItemStatus {
-        ACTIVE,   // 경매 진행 중
-        ENDED,    // 경매 종료
-        SOLD,     // 판매 완료
-        DELETED   // 삭제됨
+        RECRUITING,        // 참여자 모집 중
+        AUCTION_STARTED,   // 경매 진행 중
+        AUCTION_ENDED,     // 경매 종료
+        SOLD,              // 판매 완료
+        DELETED            // 삭제됨
     }
 }

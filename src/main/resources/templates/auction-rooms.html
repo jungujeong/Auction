@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('내 경매방 - 중고경매')}"></head>
+<body>
+    <div th:replace="~{fragments/layout :: navbar}"></div>
+
+    <div class="container">
+        <h1 class="section-title mt-4">내 경매방</h1>
+        <p class="text-muted mb-4">참여 중인 경매 목록입니다.</p>
+
+        <div id="auctionRoomsContainer">
+            <p class="text-center">로딩 중...</p>
+        </div>
+    </div>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+    <script th:inline="javascript">
+        const contextPath = /*[[@{/}]]*/ '';
+        const basePath = contextPath.endsWith('/') ? contextPath.slice(0, -1) : contextPath;
+
+        async function loadAuctionRooms() {
+            try {
+                const response = await fetch(basePath + '/api/auctions/my-auctions');
+                if (!response.ok) {
+                    throw new Error('Failed to load auction rooms');
+                }
+
+                const participants = await response.json();
+                const container = document.getElementById('auctionRoomsContainer');
+
+                if (participants.length === 0) {
+                    container.innerHTML = '<p class="text-center text-muted">참여 중인 경매가 없습니다.</p>';
+                    return;
+                }
+
+                let html = '<div class="row">';
+                participants.forEach(participant => {
+                    const item = participant.item;
+                    const status = getStatusText(item.status);
+                    const statusClass = getStatusClass(item.status);
+
+                    html += `
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100">
+                                ${item.imageUrl ? `<img src="${basePath}${item.imageUrl}" class="card-img-top" alt="${item.title}" style="height: 200px; object-fit: cover;">` : ''}
+                                <div class="card-body">
+                                    <h5 class="card-title">${item.title}</h5>
+                                    <p class="card-text text-muted" style="font-size: 0.9rem;">${item.description.substring(0, 100)}${item.description.length > 100 ? '...' : ''}</p>
+                                    <p class="mb-1"><strong>시작가:</strong> ${item.startPrice.toLocaleString()}원</p>
+                                    <p class="mb-1"><strong>현재가:</strong> ${item.currentPrice.toLocaleString()}원</p>
+                                    <p class="mb-3"><span class="badge ${statusClass}">${status}</span></p>
+                                    ${item.status === 'AUCTION_STARTED' ?
+                                        `<a href="${basePath}/auctions/room/${item.id}" class="btn btn-primary w-100">경매방 입장</a>` :
+                                        item.status === 'RECRUITING' ?
+                                        `<button class="btn btn-secondary w-100" disabled>모집 중 (${formatTime(item.recruitmentEndTime)})</button>` :
+                                        `<button class="btn btn-secondary w-100" disabled>${status}</button>`
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                container.innerHTML = html;
+
+            } catch (error) {
+                console.error('Error loading auction rooms:', error);
+                document.getElementById('auctionRoomsContainer').innerHTML =
+                    '<p class="text-center text-danger">경매방 목록을 불러오는데 실패했습니다.</p>';
+            }
+        }
+
+        function getStatusText(status) {
+            const statusMap = {
+                'RECRUITING': '모집 중',
+                'AUCTION_STARTED': '경매 진행 중',
+                'AUCTION_ENDED': '경매 종료',
+                'SOLD': '판매 완료',
+                'DELETED': '삭제됨'
+            };
+            return statusMap[status] || status;
+        }
+
+        function getStatusClass(status) {
+            const classMap = {
+                'RECRUITING': 'bg-info',
+                'AUCTION_STARTED': 'bg-success',
+                'AUCTION_ENDED': 'bg-secondary',
+                'SOLD': 'bg-primary',
+                'DELETED': 'bg-danger'
+            };
+            return classMap[status] || 'bg-secondary';
+        }
+
+        function formatTime(dateTimeString) {
+            const date = new Date(dateTimeString);
+            const now = new Date();
+            const diff = date - now;
+
+            if (diff < 0) return '종료';
+
+            const minutes = Math.floor(diff / 60000);
+            const seconds = Math.floor((diff % 60000) / 1000);
+            return `${minutes}분 ${seconds}초 후`;
+        }
+
+        // 페이지 로드 시 경매방 목록 불러오기
+        loadAuctionRooms();
+
+        // 1초마다 시간 업데이트
+        setInterval(loadAuctionRooms, 10000);
+    </script>
+
+    <style>
+        .card {
+            transition: transform 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .badge {
+            color: white;
+            padding: 0.5rem 1rem;
+        }
+    </style>
+</body>
+</html>

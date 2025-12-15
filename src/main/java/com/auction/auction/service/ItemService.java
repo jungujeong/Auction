@@ -36,9 +36,10 @@ public class ItemService {
         return itemRepository.findByStatusNotOrderByCreatedAtDesc(ItemStatus.DELETED);
     }
 
-    // 진행 중인 경매 목록 조회
+    // 진행 중인 경매 목록 조회 (모집 중 + 경매 진행 중)
     public List<Item> getActiveItems() {
-        return itemRepository.findByStatusOrderByCreatedAtDesc(ItemStatus.ACTIVE);
+        // DELETED 제외하고 최신순으로 조회
+        return itemRepository.findByStatusNotOrderByCreatedAtDesc(ItemStatus.DELETED);
     }
 
     // 상세 조회

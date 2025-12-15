@@ -120,4 +120,17 @@ public class ViewController {
             return "error";
         }
     }
+
+    // 경매방 목록 페이지
+    @GetMapping("/auctions/rooms")
+    public String auctionRooms() {
+        return "auction-rooms";
+    }
+
+    // 경매방 상세 페이지
+    @GetMapping("/auctions/room/{id}")
+    public String auctionRoom(@PathVariable(name = "id") Long id, Model model) {
+        model.addAttribute("itemId", id);
+        return "auction-room";
+    }
 }

@@ -141,6 +141,8 @@ public class ItemController {
                 item.getCurrentPrice(),
                 item.getImageUrl(),
                 item.getStatus().name(),
+                item.getRecruitmentEndTime(),
+                item.getAuctionStartTime(),
                 item.getEndTime(),
                 item.getSeller().getUsername(),
                 item.getCreatedAt()
