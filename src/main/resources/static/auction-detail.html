@@ -15,8 +15,10 @@
                     <li><a href="/auction/">홈</a></li>
                     <li><a href="/auction/items.html">경매 목록</a></li>
                     <li><a href="/auction/register-item.html">물건 등록</a></li>
-                    <li><a href="/auction/login.html">로그인</a></li>
-                    <li><a href="/auction/signup.html">회원가입</a></li>
+                    <li id="loginLink"><a href="/auction/login.html">로그인</a></li>
+                    <li id="signupLink"><a href="/auction/signup.html">회원가입</a></li>
+                    <li id="userInfo" style="display: none;"><span id="usernameDisplay"></span></li>
+                    <li id="logoutLink" style="display: none;"><a href="#" onclick="logout()">로그아웃</a></li>
                 </ul>
             </nav>
         </div>
@@ -49,6 +51,7 @@
                         <input type="number" id="bidAmount" min="0">
                     </div>
                     <button class="btn btn-primary" style="width: 100%;">입찰하기</button>
+                    <button id="deleteButton" class="btn btn-danger" style="width: 100%; margin-top: 0.5rem; display: none;" onclick="deleteItem()">삭제하기</button>
                 </div>
             </div>
             <div class="mt-4">
@@ -71,6 +74,33 @@
     </footer>
 
     <script>
+        // 페이지 로드 시 로그인 상태 확인
+        window.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            const username = localStorage.getItem('username');
+
+            if (token && username) {
+                document.getElementById('loginLink').style.display = 'none';
+                document.getElementById('signupLink').style.display = 'none';
+                document.getElementById('userInfo').style.display = 'block';
+                document.getElementById('logoutLink').style.display = 'block';
+                document.getElementById('usernameDisplay').textContent = username + '님';
+            } else {
+                document.getElementById('loginLink').style.display = 'block';
+                document.getElementById('signupLink').style.display = 'block';
+                document.getElementById('userInfo').style.display = 'none';
+                document.getElementById('logoutLink').style.display = 'none';
+            }
+        });
+
+        // 로그아웃
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            alert('로그아웃 되었습니다.');
+            window.location.reload();
+        }
+
         // URL에서 아이템 ID 가져오기
         const urlParams = new URLSearchParams(window.location.search);
         const itemId = urlParams.get('id');
@@ -117,6 +147,45 @@
             // 입찰가 최소값 설정 (현재가 + 1000원)
             document.getElementById('bidAmount').min = item.currentPrice + 1000;
             document.getElementById('bidAmount').value = item.currentPrice + 1000;
+
+            // 본인이 등록한 물건인지 확인하여 삭제 버튼 표시
+            const username = localStorage.getItem('username');
+            if (username && item.sellerName === username) {
+                document.getElementById('deleteButton').style.display = 'block';
+            }
+        }
+
+        // 물건 삭제
+        async function deleteItem() {
+            if (!confirm('정말 삭제하시겠습니까?')) {
+                return;
+            }
+
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('로그인이 필요합니다.');
+                window.location.href = '/auction/login.html';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/auction/api/items/${itemId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+
+                if (response.ok) {
+                    alert('물건이 삭제되었습니다.');
+                    window.location.href = '/auction/items.html';
+                } else {
+                    const error = await response.text();
+                    alert('삭제 실패: ' + error);
+                }
+            } catch (error) {
+                alert('오류가 발생했습니다: ' + error);
+            }
         }
 
         // 가격 포맷팅

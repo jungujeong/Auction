@@ -97,61 +97,22 @@
                 return;
             }
 
-            itemList.innerHTML = items.map(item => {
-                // 본인이 등록한 물건인지 확인
-                const isMine = currentUsername && item.sellerName === currentUsername;
-
-                return `
-                    <div class="item-card">
-                        <img src="${item.imageUrl || 'https://via.placeholder.com/300x200?text=No+Image'}"
-                             alt="${item.title}">
-                        <div class="item-card-content">
-                            <h3>${item.title}</h3>
-                            <p class="price">${formatPrice(item.currentPrice)}원</p>
-                            <p class="meta">
-                                시작가: ${formatPrice(item.startPrice)}원<br>
-                                판매자: ${item.sellerName}<br>
-                                종료: ${formatDateTime(item.endTime)}
-                            </p>
-                            <span class="status ${item.status.toLowerCase()}">${getStatusText(item.status)}</span>
-                            <a href="/auction/auction-detail.html?id=${item.id}" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">상세보기</a>
-                            ${isMine ? `<button onclick="deleteItem(${item.id})" class="btn btn-danger" style="width: 100%; margin-top: 0.5rem;">삭제하기</button>` : ''}
-                        </div>
+            itemList.innerHTML = items.map(item => `
+                <div class="item-card" onclick="location.href='/auction/auction-detail.html?id=${item.id}'" style="cursor: pointer;">
+                    <img src="${item.imageUrl || 'https://via.placeholder.com/300x200?text=No+Image'}"
+                         alt="${item.title}">
+                    <div class="item-card-content">
+                        <h3>${item.title}</h3>
+                        <p class="price">${formatPrice(item.currentPrice)}원</p>
+                        <p class="meta">
+                            시작가: ${formatPrice(item.startPrice)}원<br>
+                            판매자: ${item.sellerName}<br>
+                            종료: ${formatDateTime(item.endTime)}
+                        </p>
+                        <span class="status ${item.status.toLowerCase()}">${getStatusText(item.status)}</span>
                     </div>
-                `;
-            }).join('');
-        }
-
-        // 물건 삭제
-        async function deleteItem(itemId) {
-            if (!confirm('정말 삭제하시겠습니까?')) {
-                return;
-            }
-
-            const token = localStorage.getItem('token');
-            if (!token) {
-                alert('로그인이 필요합니다.');
-                return;
-            }
-
-            try {
-                const response = await fetch(`/auction/api/items/${itemId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': 'Bearer ' + token
-                    }
-                });
-
-                if (response.ok) {
-                    alert('물건이 삭제되었습니다.');
-                    loadItems(); // 목록 새로고침
-                } else {
-                    const error = await response.text();
-                    alert('삭제 실패: ' + error);
-                }
-            } catch (error) {
-                alert('오류가 발생했습니다: ' + error);
-            }
+                </div>
+            `).join('');
         }
 
         // 가격 포맷팅

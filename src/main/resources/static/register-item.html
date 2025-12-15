@@ -15,8 +15,10 @@
                     <li><a href="/auction/">홈</a></li>
                     <li><a href="/auction/items.html">경매 목록</a></li>
                     <li><a href="/auction/register-item.html">물건 등록</a></li>
-                    <li><a href="/auction/login.html">로그인</a></li>
-                    <li><a href="/auction/signup.html">회원가입</a></li>
+                    <li id="loginLink"><a href="/auction/login.html">로그인</a></li>
+                    <li id="signupLink"><a href="/auction/signup.html">회원가입</a></li>
+                    <li id="userInfo" style="display: none;"><span id="usernameDisplay"></span></li>
+                    <li id="logoutLink" style="display: none;"><a href="#" onclick="logout()">로그아웃</a></li>
                 </ul>
             </nav>
         </div>
@@ -72,14 +74,34 @@
     </footer>
 
     <script>
-        // 로그인 체크
+        // 로그인 체크 및 상태 표시
         window.addEventListener('DOMContentLoaded', () => {
             const token = localStorage.getItem('token');
+            const username = localStorage.getItem('username');
+
             if (!token) {
                 alert('로그인이 필요합니다.');
                 window.location.href = '/auction/login.html';
+                return;
+            }
+
+            // 로그인 상태 표시
+            if (username) {
+                document.getElementById('loginLink').style.display = 'none';
+                document.getElementById('signupLink').style.display = 'none';
+                document.getElementById('userInfo').style.display = 'block';
+                document.getElementById('logoutLink').style.display = 'block';
+                document.getElementById('usernameDisplay').textContent = username + '님';
             }
         });
+
+        // 로그아웃
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            alert('로그아웃 되었습니다.');
+            window.location.href = '/auction/';
+        }
 
         // 이미지 미리보기
         document.getElementById('images').addEventListener('change', function(e) {

@@ -118,7 +118,7 @@ public class ItemController {
                 item.getImageUrl(),
                 item.getStatus().name(),
                 item.getEndTime(),
-                item.getSeller().getName(),
+                item.getSeller().getUsername(),
                 item.getCreatedAt()
         );
     }
