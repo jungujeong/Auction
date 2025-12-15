@@ -28,7 +28,7 @@ public class ViewController {
 
     // 로그인 페이지
     @GetMapping("/login")
-    public String login(@RequestParam(required = false) String error, Model model) {
+    public String login(@RequestParam(required = false, name = "error") String error, Model model) {
         if (error != null) {
             model.addAttribute("error", "아이디 또는 비밀번호가 올바르지 않습니다.");
         }
@@ -50,20 +50,28 @@ public class ViewController {
 
     // 경매 상세 페이지
     @GetMapping("/items/{id}")
-    public String itemDetail(@PathVariable Long id, Model model,
+    public String itemDetail(@PathVariable(name = "id") Long id, Model model,
                              @AuthenticationPrincipal UserDetails userDetails) {
-        Item item = itemService.getItem(id);
-        model.addAttribute("item", item);
+        try {
+            System.out.println("=== 상세 페이지 요청: id = " + id);
+            Item item = itemService.getItem(id);
+            model.addAttribute("item", item);
 
-        // 로그인한 사용자가 판매자인지 확인
-        if (userDetails != null) {
-            boolean isSeller = item.getSeller().getUsername().equals(userDetails.getUsername());
-            model.addAttribute("isSeller", isSeller);
-        } else {
-            model.addAttribute("isSeller", false);
+            // 로그인한 사용자가 판매자인지 확인
+            if (userDetails != null) {
+                boolean isSeller = item.getSeller().getUsername().equals(userDetails.getUsername());
+                model.addAttribute("isSeller", isSeller);
+            } else {
+                model.addAttribute("isSeller", false);
+            }
+
+            return "items/detail";
+        } catch (Exception e) {
+            System.out.println("=== 상세 페이지 오류: " + e.getMessage());
+            e.printStackTrace();
+            model.addAttribute("error", e.getMessage());
+            return "error";
         }
-
-        return "items/detail";
     }
 
     // 물건 등록 페이지

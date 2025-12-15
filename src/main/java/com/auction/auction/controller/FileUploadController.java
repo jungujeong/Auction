@@ -16,13 +16,13 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("/api/upload")
+@RequestMapping("/api")
 public class FileUploadController {
 
     @Value("${file.upload-dir}")
     private String uploadDir;
 
-    @PostMapping("/image")
+    @PostMapping("/upload")
     public ResponseEntity<?> uploadImage(@RequestParam("file") MultipartFile file) {
         try {
             // 파일이 비어있는지 확인

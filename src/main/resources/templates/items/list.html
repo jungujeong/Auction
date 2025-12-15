@@ -9,7 +9,8 @@
 
         <div class="grid" th:if="${items != null and !items.isEmpty()}">
             <div class="item-card" th:each="item : ${items}"
-                 th:onclick="'location.href=\'/items/' + ${item.id} + '\''"
+                 th:data-url="@{/items/{id}(id=${item.id})}"
+                 onclick="location.href=this.getAttribute('data-url')"
                  style="cursor: pointer;">
                 <img th:src="${item.imageUrl != null ? item.imageUrl : 'https://via.placeholder.com/300x200?text=No+Image'}"
                      th:alt="${item.title}">

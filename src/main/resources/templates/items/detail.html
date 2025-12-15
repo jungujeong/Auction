@@ -54,20 +54,24 @@
 
     <footer th:replace="~{fragments/layout :: footer}"></footer>
 
-    <script th:if="${isSeller}">
+    <script th:if="${isSeller}" th:inline="javascript">
+        const contextPath = /*[[@{/}]]*/ '';
+        const basePath = contextPath.endsWith('/') ? contextPath.slice(0, -1) : contextPath;
+        const itemId = /*[[${item.id}]]*/ 0;
+
         async function deleteItem() {
             if (!confirm('정말로 이 물건을 삭제하시겠습니까?')) {
                 return;
             }
 
             try {
-                const response = await fetch('/api/items/' + [[${item.id}]], {
+                const response = await fetch(basePath + '/api/items/' + itemId, {
                     method: 'DELETE'
                 });
 
                 if (response.ok) {
                     alert('물건이 삭제되었습니다.');
-                    window.location.href = '/items';
+                    window.location.href = basePath + '/items';
                 } else {
                     const error = await response.text();
                     alert('삭제 실패: ' + error);

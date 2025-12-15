@@ -35,3 +35,12 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Upload files ###
+uploads/
+
+### Claude ###
+.claude/
+
+### Windows special files ###
+nul

@@ -32,7 +32,10 @@
 
                 <div class="form-group">
                     <label for="image">이미지</label>
-                    <input type="file" id="image" name="image" accept="image/*">
+                    <input type="file" id="image" name="image" accept="image/*" onchange="previewImage(event)">
+                    <div id="imagePreview" style="margin-top: 1rem; display: none;">
+                        <img id="preview" src="" alt="미리보기" style="max-width: 100%; max-height: 300px; border-radius: 8px; border: 1px solid #ddd;">
+                    </div>
                 </div>
 
                 <div class="form-actions">
@@ -45,7 +48,30 @@
 
     <footer th:replace="~{fragments/layout :: footer}"></footer>
 
-    <script>
+    <script th:inline="javascript">
+        const contextPath = /*[[@{/}]]*/ '';
+        // contextPath에는 이미 '/auction/'이 포함되어 있으므로 마지막 /를 제거
+        const basePath = contextPath.endsWith('/') ? contextPath.slice(0, -1) : contextPath;
+
+        // 이미지 미리보기
+        function previewImage(event) {
+            const file = event.target.files[0];
+            const preview = document.getElementById('preview');
+            const previewContainer = document.getElementById('imagePreview');
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    previewContainer.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                preview.src = '';
+                previewContainer.style.display = 'none';
+            }
+        }
+
         document.getElementById('registerForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
@@ -58,7 +84,7 @@
                 formData.append('file', imageFile);
 
                 try {
-                    const uploadResponse = await fetch('/api/upload', {
+                    const uploadResponse = await fetch(basePath + '/api/upload', {
                         method: 'POST',
                         body: formData
                     });
@@ -87,7 +113,7 @@
             };
 
             try {
-                const response = await fetch('/api/items', {
+                const response = await fetch(basePath + '/api/items', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -97,7 +123,7 @@
 
                 if (response.ok) {
                     alert('물건이 등록되었습니다.');
-                    window.location.href = '/items';
+                    window.location.href = basePath + '/items';
                 } else {
                     const error = await response.text();
                     alert('등록 실패: ' + error);

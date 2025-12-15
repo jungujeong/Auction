@@ -5,7 +5,7 @@
 <body>
     <div th:replace="~{fragments/layout :: navbar}"></div>
 
-    <div class="hero">
+    <div class="hero-section">
         <div class="container">
             <h1>중고 물건을 경매로 사고 팔아보세요!</h1>
             <p>안전하고 투명한 온라인 경매 플랫폼</p>
@@ -18,7 +18,8 @@
 
         <div class="grid" th:if="${items != null and !items.isEmpty()}">
             <div class="item-card" th:each="item : ${items}"
-                 th:onclick="'location.href=\'/items/' + ${item.id} + '\''"
+                 th:data-url="@{/items/{id}(id=${item.id})}"
+                 onclick="location.href=this.getAttribute('data-url')"
                  style="cursor: pointer;">
                 <img th:src="${item.imageUrl != null ? item.imageUrl : 'https://via.placeholder.com/300x200?text=No+Image'}"
                      th:alt="${item.title}">
