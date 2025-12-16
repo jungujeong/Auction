@@ -51,7 +51,7 @@ public class FileUploadController {
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
             // 저장된 파일의 URL 반환 (웹에서 접근 가능한 경로)
-            String fileUrl = "/auction/uploads/images/" + filename;
+            String fileUrl = "/uploads/images/" + filename;
 
             return ResponseEntity.ok().body(new FileUploadResponse(fileUrl, filename));
 

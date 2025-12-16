@@ -8,7 +8,7 @@
     <div class="container">
         <div class="detail-container mt-4">
             <div class="detail-image">
-                <img th:src="${item.imageUrl != null ? item.imageUrl : 'https://via.placeholder.com/600x400?text=No+Image'}"
+                <img th:src="@{${item.imageUrl != null ? item.imageUrl : 'https://via.placeholder.com/600x400?text=No+Image'}}"
                      th:alt="${item.title}">
             </div>
 
@@ -16,9 +16,14 @@
                 <div class="detail-header">
                     <h1 th:text="${item.title}">물건 제목</h1>
                     <span class="status"
-                          th:classappend="${item.status.name() == 'ACTIVE' ? 'active' : (item.status.name() == 'ENDED' ? 'ended' : 'sold')}"
-                          th:text="${item.status.name() == 'ACTIVE' ? '진행중' : (item.status.name() == 'ENDED' ? '종료' : '판매완료')}">
-                        진행중
+                          th:classappend="${item.status.name() == 'RECRUITING' ? 'active' :
+                                         (item.status.name() == 'AUCTION_STARTED' ? 'active' :
+                                         (item.status.name() == 'AUCTION_ENDED' ? 'ended' : 'sold'))}"
+                          th:text="${item.status.name() == 'RECRUITING' ? '참여자 모집중' :
+                                   (item.status.name() == 'AUCTION_STARTED' ? '경매 진행중' :
+                                   (item.status.name() == 'AUCTION_ENDED' ? '경매 종료' :
+                                   (item.status.name() == 'SOLD' ? '판매완료' : '삭제됨')))}">
+                        참여자 모집중
                     </span>
                 </div>
 
@@ -36,7 +41,9 @@
                 <div class="item-meta">
                     <p><strong>판매자:</strong> <span th:text="${item.seller.username}">판매자</span></p>
                     <p><strong>등록일:</strong> <span th:text="${#temporals.format(item.createdAt, 'yyyy-MM-dd HH:mm')}">2024-01-01 00:00</span></p>
-                    <p><strong>종료일:</strong> <span th:text="${#temporals.format(item.endTime, 'yyyy-MM-dd HH:mm')}">2024-01-01 00:00</span></p>
+                    <p th:if="${item.recruitmentEndTime != null}"><strong>모집 종료:</strong> <span th:text="${#temporals.format(item.recruitmentEndTime, 'yyyy-MM-dd HH:mm')}">2024-01-01 00:00</span></p>
+                    <p th:if="${item.auctionStartTime != null}"><strong>경매 시작:</strong> <span th:text="${#temporals.format(item.auctionStartTime, 'yyyy-MM-dd HH:mm')}">2024-01-01 00:00</span></p>
+                    <p><strong>경매 종료:</strong> <span th:text="${#temporals.format(item.endTime, 'yyyy-MM-dd HH:mm')}">2024-01-01 00:00</span></p>
                 </div>
 
                 <div class="description">
@@ -94,13 +101,8 @@
                 alert('오류가 발생했습니다.');
             }
         }
-    </script>
 
-    <script th:if="${isSeller}" th:inline="javascript">
-        const contextPath = /*[[@{/}]]*/ '';
-        const basePath = contextPath.endsWith('/') ? contextPath.slice(0, -1) : contextPath;
-        const itemId = /*[[${item.id}]]*/ 0;
-
+        // 물건 삭제하기
         async function deleteItem() {
             if (!confirm('정말로 이 물건을 삭제하시겠습니까?')) {
                 return;

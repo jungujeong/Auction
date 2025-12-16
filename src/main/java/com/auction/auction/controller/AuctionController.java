@@ -33,7 +33,7 @@ public class AuctionController {
      */
     @PostMapping("/{itemId}/join")
     public ResponseEntity<?> joinAuction(
-            @PathVariable Long itemId,
+            @PathVariable("itemId") Long itemId,
             @AuthenticationPrincipal UserDetails userDetails) {
         try {
             User user = userRepository.findByUsername(userDetails.getUsername())
@@ -63,7 +63,7 @@ public class AuctionController {
      * 특정 경매의 참여자 목록
      */
     @GetMapping("/{itemId}/participants")
-    public ResponseEntity<List<AuctionParticipant>> getAuctionParticipants(@PathVariable Long itemId) {
+    public ResponseEntity<List<AuctionParticipant>> getAuctionParticipants(@PathVariable("itemId") Long itemId) {
         List<AuctionParticipant> participants = auctionService.getAuctionParticipants(itemId);
         return ResponseEntity.ok(participants);
     }
@@ -72,7 +72,7 @@ public class AuctionController {
      * 특정 경매의 입찰 내역
      */
     @GetMapping("/{itemId}/bids")
-    public ResponseEntity<List<Bid>> getAuctionBids(@PathVariable Long itemId) {
+    public ResponseEntity<List<Bid>> getAuctionBids(@PathVariable("itemId") Long itemId) {
         List<Bid> bids = auctionService.getAuctionBids(itemId);
         return ResponseEntity.ok(bids);
     }
@@ -82,7 +82,7 @@ public class AuctionController {
      */
     @PostMapping("/{itemId}/bid")
     public ResponseEntity<?> placeBid(
-            @PathVariable Long itemId,
+            @PathVariable("itemId") Long itemId,
             @RequestBody BidRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
         try {

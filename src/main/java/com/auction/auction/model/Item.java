@@ -47,10 +47,10 @@ public class Item {
     @Column(nullable = false, length = 20)
     private ItemStatus status = ItemStatus.RECRUITING;
 
-    @Column(name = "recruitment_end_time", nullable = false)
-    private LocalDateTime recruitmentEndTime;  // 참여자 모집 종료 시간 (등록 후 10분)
+    @Column(name = "recruitment_end_time")
+    private LocalDateTime recruitmentEndTime;  // 참여자 모집 종료 시간 (등록 후 5분)
 
-    @Column(name = "auction_start_time", nullable = false)
+    @Column(name = "auction_start_time")
     private LocalDateTime auctionStartTime;    // 경매 시작 시간 (모집 종료와 동시)
 
     @Column(name = "end_time", nullable = false)
@@ -69,9 +69,9 @@ public class Item {
         if (this.currentPrice == null) {
             this.currentPrice = this.startPrice;
         }
-        // 참여자 모집 종료 시간 = 등록 후 10분
+        // 참여자 모집 종료 시간 = 등록 후 5분
         if (this.recruitmentEndTime == null) {
-            this.recruitmentEndTime = this.createdAt.plusMinutes(10);
+            this.recruitmentEndTime = this.createdAt.plusMinutes(5);
         }
         // 경매 시작 시간 = 모집 종료 시간
         if (this.auctionStartTime == null) {

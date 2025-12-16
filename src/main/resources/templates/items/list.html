@@ -12,7 +12,7 @@
                  th:data-url="@{/items/{id}(id=${item.id})}"
                  onclick="location.href=this.getAttribute('data-url')"
                  style="cursor: pointer;">
-                <img th:src="${item.imageUrl != null ? item.imageUrl : 'https://via.placeholder.com/300x200?text=No+Image'}"
+                <img th:src="@{${item.imageUrl != null ? item.imageUrl : 'https://via.placeholder.com/300x200?text=No+Image'}}"
                      th:alt="${item.title}">
                 <div class="item-card-content">
                     <h3 th:text="${item.title}">물건 제목</h3>
@@ -23,9 +23,14 @@
                         종료: <span th:text="${#temporals.format(item.endTime, 'yyyy-MM-dd HH:mm')}">2024-01-01 00:00</span>
                     </p>
                     <span class="status"
-                          th:classappend="${item.status.name() == 'ACTIVE' ? 'active' : (item.status.name() == 'ENDED' ? 'ended' : 'sold')}"
-                          th:text="${item.status.name() == 'ACTIVE' ? '진행중' : (item.status.name() == 'ENDED' ? '종료' : '판매완료')}">
-                        진행중
+                          th:classappend="${item.status.name() == 'RECRUITING' ? 'active' :
+                                         (item.status.name() == 'AUCTION_STARTED' ? 'active' :
+                                         (item.status.name() == 'AUCTION_ENDED' ? 'ended' : 'sold'))}"
+                          th:text="${item.status.name() == 'RECRUITING' ? '모집중' :
+                                   (item.status.name() == 'AUCTION_STARTED' ? '진행중' :
+                                   (item.status.name() == 'AUCTION_ENDED' ? '종료' :
+                                   (item.status.name() == 'SOLD' ? '판매완료' : '삭제됨')))}">
+                        모집중
                     </span>
                 </div>
             </div>

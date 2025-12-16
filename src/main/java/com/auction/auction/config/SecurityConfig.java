@@ -33,6 +33,9 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // 정적 리소스 허용
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/uploads/**").permitAll()
+                // WebSocket 엔드포인트 허용
+                .requestMatchers("/ws-auction/**").permitAll()
+                .requestMatchers("/webjars/**").permitAll()
                 // 공개 페이지
                 .requestMatchers("/", "/signup", "/login").permitAll()
                 .requestMatchers("/items", "/items/**").permitAll()
