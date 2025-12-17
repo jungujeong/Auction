@@ -61,11 +61,22 @@ public class AuctionService {
     }
 
     /**
-     * 사용자가 참여한 경매 목록 조회
+     * 사용자가 참여한 경매 목록 조회 (최신순)
      */
     @Transactional(readOnly = true)
     public List<AuctionParticipant> getUserAuctions(Long userId) {
-        return participantRepository.findByUserId(userId);
+        return participantRepository.findByUserIdOrderByJoinedAtDesc(userId);
+    }
+
+    /**
+     * 경매방 나가기 (참여 취소)
+     */
+    @Transactional
+    public void leaveAuction(Long itemId, Long userId) {
+        AuctionParticipant participant = participantRepository.findByItemIdAndUserId(itemId, userId)
+                .orElseThrow(() -> new IllegalArgumentException("참여하지 않은 경매입니다."));
+
+        participantRepository.delete(participant);
     }
 
     /**

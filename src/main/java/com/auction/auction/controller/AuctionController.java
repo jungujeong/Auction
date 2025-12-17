@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -92,6 +93,24 @@ public class AuctionController {
             Bid bid = auctionService.placeBid(itemId, user, request.getBidAmount());
             return ResponseEntity.ok(bid);
         } catch (IllegalStateException | IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
+     * 경매방 나가기 (참여 취소)
+     */
+    @DeleteMapping("/{itemId}/leave")
+    public ResponseEntity<?> leaveAuction(
+            @PathVariable("itemId") Long itemId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            User user = userRepository.findByUsername(userDetails.getUsername())
+                    .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+            auctionService.leaveAuction(itemId, user.getId());
+            return ResponseEntity.ok().body("경매방에서 나갔습니다.");
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }

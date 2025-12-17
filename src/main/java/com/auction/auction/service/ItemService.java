@@ -36,10 +36,13 @@ public class ItemService {
         return itemRepository.findByStatusNotOrderByCreatedAtDesc(ItemStatus.DELETED);
     }
 
-    // 진행 중인 경매 목록 조회 (모집 중 + 경매 진행 중)
+    // 진행 중인 경매 목록 조회 (모집 중 + 경매 진행 중만, 종료된 것 제외)
     public List<Item> getActiveItems() {
-        // DELETED 제외하고 최신순으로 조회
-        return itemRepository.findByStatusNotOrderByCreatedAtDesc(ItemStatus.DELETED);
+        // DELETED와 AUCTION_ENDED 제외하고 최신순으로 조회
+        List<Item> allItems = itemRepository.findByStatusNotOrderByCreatedAtDesc(ItemStatus.DELETED);
+        return allItems.stream()
+                .filter(item -> item.getStatus() != ItemStatus.AUCTION_ENDED && item.getStatus() != ItemStatus.SOLD)
+                .toList();
     }
 
     // 상세 조회

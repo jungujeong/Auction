@@ -14,8 +14,8 @@ public interface AuctionParticipantRepository extends JpaRepository<AuctionParti
     // 특정 경매의 모든 참여자 조회
     List<AuctionParticipant> findByItemId(Long itemId);
 
-    // 특정 사용자가 참여한 모든 경매 조회
-    List<AuctionParticipant> findByUserId(Long userId);
+    // 특정 사용자가 참여한 모든 경매 조회 (최신순 - 최근 참여한 것이 위로)
+    List<AuctionParticipant> findByUserIdOrderByJoinedAtDesc(Long userId);
 
     // 특정 사용자가 특정 경매에 참여했는지 확인
     Optional<AuctionParticipant> findByItemIdAndUserId(Long itemId, Long userId);

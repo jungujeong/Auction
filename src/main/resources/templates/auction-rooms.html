@@ -43,7 +43,7 @@
 
                     html += `
                         <div class="col-md-6 col-lg-4 mb-4">
-                            <div class="card h-100">
+                            <div class="card h-100" style="position: relative;">
                                 ${item.imageUrl ? `<img src="${basePath}${item.imageUrl}" class="card-img-top" alt="${item.title}" style="height: 200px; object-fit: cover;">` : ''}
                                 <div class="card-body">
                                     <h5 class="card-title">${item.title}</h5>
@@ -58,6 +58,12 @@
                                         `<button class="btn btn-secondary w-100" disabled>${status}</button>`
                                     }
                                 </div>
+                                <!-- 삭제 버튼 (모든 경매방에 표시) -->
+                                <button onclick="leaveAuction(${item.id})"
+                                        class="btn btn-sm btn-danger delete-room-btn"
+                                        style="position: absolute; top: 10px; right: 10px; z-index: 10;">
+                                    나가기
+                                </button>
                             </div>
                         </div>
                     `;
@@ -106,10 +112,34 @@
             return `${minutes}분 ${seconds}초 후`;
         }
 
+        // 경매방 나가기
+        async function leaveAuction(itemId) {
+            if (!confirm('정말로 이 경매방을 나가시겠습니까?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(basePath + '/api/auctions/' + itemId + '/leave', {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(errorText);
+                }
+
+                alert('경매방에서 나갔습니다.');
+                loadAuctionRooms(); // 목록 새로고침
+            } catch (error) {
+                console.error('Error leaving auction:', error);
+                alert('경매방 나가기에 실패했습니다: ' + error.message);
+            }
+        }
+
         // 페이지 로드 시 경매방 목록 불러오기
         loadAuctionRooms();
 
-        // 1초마다 시간 업데이트
+        // 10초마다 시간 업데이트
         setInterval(loadAuctionRooms, 10000);
     </script>
 
