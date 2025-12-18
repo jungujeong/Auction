@@ -145,6 +145,7 @@ public class ItemController {
                 item.getAuctionStartTime(),
                 item.getEndTime(),
                 item.getSeller().getUsername(),
+                item.getWinnerId(),
                 item.getCreatedAt()
         );
     }

@@ -83,12 +83,23 @@ public class WebSocketAuctionController {
             log.error("스택 트레이스:", e);
             log.error("====================");
 
-            // 입찰 실패 메시지 생성
+            // 입찰 실패 메시지를 요청한 사용자에게만 전송
             BidMessage errorMessage = new BidMessage();
             errorMessage.setItemId(itemId);
             errorMessage.setSuccess(false);
             errorMessage.setErrorMessage(e.getMessage());
-            return errorMessage;
+
+            // 에러 메시지는 요청한 사용자에게만 전송
+            if (principal != null) {
+                messagingTemplate.convertAndSendToUser(
+                    principal.getName(),
+                    "/queue/errors",
+                    errorMessage
+                );
+            }
+
+            // null을 반환하여 브로드캐스트 하지 않음
+            return null;
         }
     }
 

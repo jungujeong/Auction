@@ -92,10 +92,18 @@
             stompClient.connect({}, function(frame) {
                 console.log('Connected: ' + frame);
 
-                // 경매방 입찰 메시지 구독
+                // 경매방 입찰 메시지 구독 (모든 사용자에게 브로드캐스트)
                 stompClient.subscribe('/topic/auction/' + itemId, function(message) {
                     const bidMessage = JSON.parse(message.body);
                     handleBidMessage(bidMessage);
+                });
+
+                // 개인 에러 메시지 구독 (현재 사용자에게만 전송)
+                stompClient.subscribe('/user/queue/errors', function(message) {
+                    const errorMessage = JSON.parse(message.body);
+                    if (!errorMessage.success && errorMessage.errorMessage) {
+                        alert('입찰 실패: ' + errorMessage.errorMessage);
+                    }
                 });
             }, function(error) {
                 console.error('WebSocket connection error:', error);
@@ -105,6 +113,11 @@
 
         // 입찰 메시지 처리
         function handleBidMessage(bidMessage) {
+            // null 체크 (에러 발생 시 null 반환됨)
+            if (!bidMessage) {
+                return;
+            }
+
             if (bidMessage.success) {
                 // 현재가 업데이트
                 document.getElementById('currentPrice').textContent =
@@ -112,8 +125,6 @@
 
                 // 입찰 내역에 추가
                 addBidToHistory(bidMessage);
-            } else {
-                alert('입찰 실패: ' + bidMessage.errorMessage);
             }
         }
 
@@ -121,9 +132,10 @@
         function addBidToHistory(bidMessage) {
             const historyContainer = document.getElementById('bidHistory');
 
-            // 첫 입찰인 경우 안내 메시지 제거
-            if (historyContainer.querySelector('.text-muted')) {
-                historyContainer.innerHTML = '';
+            // "입찰 내역이 없습니다" 메시지만 제거
+            const emptyMessage = historyContainer.querySelector('p.text-center.text-muted');
+            if (emptyMessage) {
+                emptyMessage.remove();
             }
 
             const bidElement = document.createElement('div');

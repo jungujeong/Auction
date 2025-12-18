@@ -19,5 +19,6 @@ public class ItemResponse {
     private LocalDateTime auctionStartTime;
     private LocalDateTime endTime;
     private String sellerName;
+    private Long winnerId;
     private LocalDateTime createdAt;
 }

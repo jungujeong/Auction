@@ -123,6 +123,11 @@ public class AuctionService {
             throw new IllegalArgumentException("입찰가는 현재가보다 높아야 합니다.");
         }
 
+        // 계좌 잔액 확인
+        if (user.getBalance() < bidAmount) {
+            throw new IllegalArgumentException("계좌 잔액이 부족합니다. (현재 잔액: " + user.getBalance() + "원)");
+        }
+
         // 입찰 등록
         Bid bid = new Bid();
         bid.setItem(item);

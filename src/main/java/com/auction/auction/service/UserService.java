@@ -50,7 +50,7 @@ public class UserService {
     }
 
     @Transactional
-    public User updateUser(String username, String email, String currentPassword, String newPassword) {
+    public User updateUser(String username, String email, Long balance, String currentPassword, String newPassword) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
@@ -61,6 +61,11 @@ public class UserService {
 
         // 이메일 업데이트
         user.setEmail(email);
+
+        // 잔액 업데이트
+        if (balance != null && balance >= 0) {
+            user.setBalance(balance);
+        }
 
         // 비밀번호 변경 (새 비밀번호가 있는 경우)
         if (newPassword != null && !newPassword.trim().isEmpty()) {

@@ -60,6 +60,9 @@ public class Item {
     @JoinColumn(name = "seller_id", nullable = false)
     private User seller;
 
+    @Column(name = "winner_id")
+    private Long winnerId; // 낙찰자 ID (경매 종료 시 설정)
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -69,9 +72,9 @@ public class Item {
         if (this.currentPrice == null) {
             this.currentPrice = this.startPrice;
         }
-        // 참여자 모집 종료 시간 = 등록 후 5분
+        // 참여자 모집 종료 시간 = 등록 후 3분
         if (this.recruitmentEndTime == null) {
-            this.recruitmentEndTime = this.createdAt.plusMinutes(5);
+            this.recruitmentEndTime = this.createdAt.plusMinutes(3);
         }
         // 경매 시작 시간 = 모집 종료 시간
         if (this.auctionStartTime == null) {

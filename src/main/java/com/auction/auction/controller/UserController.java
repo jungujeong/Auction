@@ -126,6 +126,7 @@ public class UserController {
             User updatedUser = userService.updateUser(
                 userDetails.getUsername(),
                 request.getEmail(),
+                request.getBalance(),
                 request.getCurrentPassword(),
                 request.getNewPassword()
             );
@@ -147,6 +148,7 @@ public class UserController {
     // 프로필 수정 요청 DTO
     public static class UpdateProfileRequest {
         private String email;
+        private Long balance;
         private String currentPassword;
         private String newPassword;
 
@@ -156,6 +158,14 @@ public class UserController {
 
         public void setEmail(String email) {
             this.email = email;
+        }
+
+        public Long getBalance() {
+            return balance;
+        }
+
+        public void setBalance(Long balance) {
+            this.balance = balance;
         }
 
         public String getCurrentPassword() {

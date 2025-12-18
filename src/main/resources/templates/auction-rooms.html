@@ -38,8 +38,15 @@
                 let html = '<div class="row">';
                 participants.forEach(participant => {
                     const item = participant.item;
-                    const status = getStatusText(item.status);
-                    const statusClass = getStatusClass(item.status);
+                    const userId = participant.user.id;
+                    const isWinner = item.winnerId == userId;  // 낙찰 여부 확인 (타입 무시하고 비교)
+
+                    // 디버깅용 로그
+                    console.log('Item:', item.title, 'Status:', item.status, 'WinnerId:', item.winnerId, 'UserId:', userId, 'IsWinner:', isWinner);
+
+                    const status = getStatusText(item.status, isWinner);
+                    const statusClass = getStatusClass(item.status, isWinner);
+                    console.log('StatusClass:', statusClass);
 
                     html += `
                         <div class="col-md-6 col-lg-4 mb-4">
@@ -78,7 +85,10 @@
             }
         }
 
-        function getStatusText(status) {
+        function getStatusText(status, isWinner) {
+            if (status === 'AUCTION_ENDED' && isWinner) {
+                return '낙찰 받음';
+            }
             const statusMap = {
                 'RECRUITING': '모집 중',
                 'AUCTION_STARTED': '경매 진행 중',
@@ -89,11 +99,14 @@
             return statusMap[status] || status;
         }
 
-        function getStatusClass(status) {
+        function getStatusClass(status, isWinner) {
+            if (status === 'AUCTION_ENDED' && isWinner) {
+                return 'bg-primary';  // 낙찰받은 경우 파란색
+            }
             const classMap = {
                 'RECRUITING': 'bg-info',
                 'AUCTION_STARTED': 'bg-success',
-                'AUCTION_ENDED': 'bg-secondary',
+                'AUCTION_ENDED': 'bg-secondary',  // 낙찰 실패 시 회색
                 'SOLD': 'bg-primary',
                 'DELETED': 'bg-danger'
             };
