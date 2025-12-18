@@ -20,6 +20,28 @@
                     <textarea id="description" name="description" rows="5" required></textarea>
                 </div>
 
+                <!-- AI 가격 추천 버튼 -->
+                <div class="form-group">
+                    <button type="button" class="btn btn-secondary" onclick="getPriceRecommendation()" style="width: 100%;">
+                        💡 AI 가격 추천 받기
+                    </button>
+                    <div id="priceRecommendation" style="display: none; margin-top: 1rem; padding: 1rem; background: #e3f2fd; border-radius: 8px; border: 1px solid #2196f3;">
+                        <h4 style="margin: 0 0 0.5rem 0; color: #1976d2; font-size: 1rem;">추천 가격 정보</h4>
+                        <p id="recommendationMessage" style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: #666;"></p>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.9rem;">
+                            <div><strong>추천 시작가:</strong> <span id="recommendedPrice" style="color: #d32f2f; font-weight: bold;"></span></div>
+                            <div><strong>평균가:</strong> <span id="averagePrice"></span></div>
+                            <div><strong>최저가:</strong> <span id="minPrice"></span></div>
+                            <div><strong>최고가:</strong> <span id="maxPrice"></span></div>
+                        </div>
+                        <button type="button" onclick="applyRecommendedPrice()" style="margin-top: 0.5rem; padding: 0.5rem 1rem; background: #2196f3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">
+                            추천가 적용하기
+                        </button>
+                    </div>
+                    <div id="priceRecommendationError" style="display: none; margin-top: 1rem; padding: 1rem; background: #ffebee; border-radius: 8px; border: 1px solid #f44336; color: #c62828;">
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label for="startPrice"><span th:text="#{register.start.price.hint}">시작가 (원)</span> *</label>
                     <input type="number" id="startPrice" name="startPrice" min="0" required>
@@ -147,6 +169,86 @@
         const now = new Date();
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
         document.getElementById('endTime').min = now.toISOString().slice(0, 16);
+
+        // 가격 추천 데이터 저장
+        let recommendationData = null;
+
+        // AI 가격 추천 받기
+        async function getPriceRecommendation() {
+            const title = document.getElementById('title').value.trim();
+            const description = document.getElementById('description').value.trim();
+
+            if (!title) {
+                alert('제목을 먼저 입력해주세요.');
+                return;
+            }
+
+            // 로딩 표시
+            const button = event.target;
+            const originalText = button.innerHTML;
+            button.innerHTML = '⏳ 분석 중...';
+            button.disabled = true;
+
+            // 이전 결과 숨기기
+            document.getElementById('priceRecommendation').style.display = 'none';
+            document.getElementById('priceRecommendationError').style.display = 'none';
+
+            try {
+                const response = await fetch('http://localhost:5000/api/recommend-price', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title: title,
+                        description: description
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success && result.data) {
+                    recommendationData = result.data;
+
+                    // 결과 표시
+                    document.getElementById('recommendationMessage').textContent = result.data.message;
+                    document.getElementById('recommendedPrice').textContent = formatPrice(result.data.recommended_price);
+                    document.getElementById('averagePrice').textContent = formatPrice(result.data.average_price);
+                    document.getElementById('minPrice').textContent = formatPrice(result.data.min_price);
+                    document.getElementById('maxPrice').textContent = formatPrice(result.data.max_price);
+
+                    document.getElementById('priceRecommendation').style.display = 'block';
+                } else {
+                    showError(result.error || '가격 추천에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('가격 추천 서버에 연결할 수 없습니다. Python 서버가 실행 중인지 확인해주세요.');
+            } finally {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }
+        }
+
+        // 추천가 적용
+        function applyRecommendedPrice() {
+            if (recommendationData && recommendationData.recommended_price > 0) {
+                document.getElementById('startPrice').value = recommendationData.recommended_price;
+                alert('추천 시작가가 적용되었습니다!');
+            }
+        }
+
+        // 가격 포맷팅
+        function formatPrice(price) {
+            return price.toLocaleString('ko-KR') + '원';
+        }
+
+        // 에러 표시
+        function showError(message) {
+            const errorDiv = document.getElementById('priceRecommendationError');
+            errorDiv.textContent = '⚠️ ' + message;
+            errorDiv.style.display = 'block';
+        }
     </script>
 </body>
 </html>
