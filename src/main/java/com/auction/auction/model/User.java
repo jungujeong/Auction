@@ -36,11 +36,17 @@ public class User {
     @Column(nullable = false, length = 50)
     private String name;
 
+    @Column(nullable = false)
+    private Long balance = 0L; // 계좌 잔액 (기본값 0원)
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
+        if (this.balance == null) {
+            this.balance = 0L;
+        }
     }
 }

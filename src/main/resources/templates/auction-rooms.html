@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head(#{auction.rooms.title} + ' - ' + #{app.title})}"></head>
+<body>
+    <div th:replace="~{fragments/layout :: navbar}"></div>
+
+    <div class="container">
+        <h1 class="section-title mt-4" th:text="#{auction.rooms.title}">내 경매방</h1>
+        <p class="text-muted mb-4" th:text="#{auction.rooms.description}">참여 중인 경매 목록입니다.</p>
+
+        <div id="auctionRoomsContainer">
+            <p class="text-center" th:text="#{items.loading}">로딩 중...</p>
+        </div>
+    </div>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+    <script th:inline="javascript">
+        // i18n 메시지를 JavaScript 변수로 전달
+        const i18n = {
+            loading: /*[[#{items.loading}]]*/ '로딩 중...',
+            noAuctions: /*[[#{auction.rooms.no.auctions}]]*/ '참여 중인 경매가 없습니다',
+            leave: /*[[#{auction.rooms.leave}]]*/ '나가기',
+            enter: /*[[#{auction.rooms.enter}]]*/ '경매방 입장',
+            startPrice: /*[[#{auction.start.price}]]*/ '시작가',
+            currentPrice: /*[[#{auction.current.price}]]*/ '현재가',
+            recruiting: /*[[#{auction.status.recruiting}]]*/ '모집 중',
+            started: /*[[#{auction.status.started}]]*/ '경매 진행 중',
+            ended: /*[[#{auction.status.ended}]]*/ '경매 종료',
+            won: /*[[#{auction.status.won}]]*/ '낙찰 받음',
+            sold: /*[[#{auction.status.sold}]]*/ '판매 완료',
+            deleted: /*[[#{auction.status.deleted}]]*/ '삭제됨',
+            timeEnded: /*[[#{auction.time.ended}]]*/ '종료'
+        };
+
+        const contextPath = /*[[@{/}]]*/ '';
+        const basePath = contextPath.endsWith('/') ? contextPath.slice(0, -1) : contextPath;
+
+        async function loadAuctionRooms() {
+            try {
+                const response = await fetch(basePath + '/api/auctions/my-auctions');
+                if (!response.ok) {
+                    throw new Error('Failed to load auction rooms');
+                }
+
+                const participants = await response.json();
+                const container = document.getElementById('auctionRoomsContainer');
+
+                if (participants.length === 0) {
+                    container.innerHTML = `<p class="text-center text-muted">${i18n.noAuctions}</p>`;
+                    return;
+                }
+
+                let html = '<div class="row">';
+                participants.forEach(participant => {
+                    const item = participant.item;
+                    const userId = participant.user.id;
+                    const isWinner = item.winnerId == userId;  // 낙찰 여부 확인 (타입 무시하고 비교)
+
+                    // 디버깅용 로그
+                    console.log('Item:', item.title, 'Status:', item.status, 'WinnerId:', item.winnerId, 'UserId:', userId, 'IsWinner:', isWinner);
+
+                    const status = getStatusText(item.status, isWinner);
+                    const statusClass = getStatusClass(item.status, isWinner);
+                    console.log('StatusClass:', statusClass);
+
+                    html += `
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100" style="position: relative;">
+                                ${item.imageUrl ? `<img src="${basePath}${item.imageUrl}" class="card-img-top" alt="${item.title}" style="height: 200px; object-fit: cover;">` : ''}
+                                <div class="card-body">
+                                    <h5 class="card-title">${item.title}</h5>
+                                    <p class="card-text text-muted" style="font-size: 0.9rem;">${item.description.substring(0, 100)}${item.description.length > 100 ? '...' : ''}</p>
+                                    <p class="mb-1"><strong>${i18n.startPrice}:</strong> ${item.startPrice.toLocaleString()}원</p>
+                                    <p class="mb-1"><strong>${i18n.currentPrice}:</strong> ${item.currentPrice.toLocaleString()}원</p>
+                                    <p class="mb-3"><span class="badge ${statusClass}">${status}</span></p>
+                                    ${item.status === 'AUCTION_STARTED' ?
+                                        `<a href="${basePath}/auctions/room/${item.id}" class="btn btn-primary w-100">${i18n.enter}</a>` :
+                                        item.status === 'RECRUITING' ?
+                                        `<button class="btn btn-secondary w-100" disabled>${i18n.recruiting} (${formatTime(item.recruitmentEndTime)})</button>` :
+                                        `<button class="btn btn-secondary w-100" disabled>${status}</button>`
+                                    }
+                                </div>
+                                <!-- 삭제 버튼 (모든 경매방에 표시) -->
+                                <button onclick="leaveAuction(${item.id})"
+                                        class="btn btn-sm btn-danger delete-room-btn"
+                                        style="position: absolute; top: 10px; right: 10px; z-index: 10;">
+                                    ${i18n.leave}
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                container.innerHTML = html;
+
+            } catch (error) {
+                console.error('Error loading auction rooms:', error);
+                document.getElementById('auctionRoomsContainer').innerHTML =
+                    '<p class="text-center text-danger">경매방 목록을 불러오는데 실패했습니다.</p>';
+            }
+        }
+
+        function getStatusText(status, isWinner) {
+            if (status === 'AUCTION_ENDED' && isWinner) {
+                return i18n.won;
+            }
+            const statusMap = {
+                'RECRUITING': i18n.recruiting,
+                'AUCTION_STARTED': i18n.started,
+                'AUCTION_ENDED': i18n.ended,
+                'SOLD': i18n.sold,
+                'DELETED': i18n.deleted
+            };
+            return statusMap[status] || status;
+        }
+
+        function getStatusClass(status, isWinner) {
+            if (status === 'AUCTION_ENDED' && isWinner) {
+                return 'bg-primary';  // 낙찰받은 경우 파란색
+            }
+            const classMap = {
+                'RECRUITING': 'bg-info',
+                'AUCTION_STARTED': 'bg-success',
+                'AUCTION_ENDED': 'bg-secondary',  // 낙찰 실패 시 회색
+                'SOLD': 'bg-primary',
+                'DELETED': 'bg-danger'
+            };
+            return classMap[status] || 'bg-secondary';
+        }
+
+        function formatTime(dateTimeString) {
+            const date = new Date(dateTimeString);
+            const now = new Date();
+            const diff = date - now;
+
+            if (diff < 0) return i18n.timeEnded;
+
+            const minutes = Math.floor(diff / 60000);
+            const seconds = Math.floor((diff % 60000) / 1000);
+            return `${minutes}분 ${seconds}초 후`;
+        }
+
+        // 경매방 나가기
+        async function leaveAuction(itemId) {
+            if (!confirm('정말로 이 경매방을 나가시겠습니까?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(basePath + '/api/auctions/' + itemId + '/leave', {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(errorText);
+                }
+
+                alert('경매방에서 나갔습니다.');
+                loadAuctionRooms(); // 목록 새로고침
+            } catch (error) {
+                console.error('Error leaving auction:', error);
+                alert('경매방 나가기에 실패했습니다: ' + error.message);
+            }
+        }
+
+        // 페이지 로드 시 경매방 목록 불러오기
+        loadAuctionRooms();
+
+        // 10초마다 시간 업데이트
+        setInterval(loadAuctionRooms, 10000);
+    </script>
+
+    <style>
+        .card {
+            transition: transform 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .badge {
+            color: white;
+            padding: 0.5rem 1rem;
+        }
+    </style>
+</body>
+</html>

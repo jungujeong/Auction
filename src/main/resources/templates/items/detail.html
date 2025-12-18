@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head(${item.title} + ' - 중고경매')}"></head>
+<body>
+    <div th:replace="~{fragments/layout :: navbar}"></div>
+
+    <div class="container">
+        <div class="detail-container mt-4">
+            <div class="detail-image">
+                <img th:src="@{${item.imageUrl != null ? item.imageUrl : 'https://via.placeholder.com/600x400?text=No+Image'}}"
+                     th:alt="${item.title}">
+            </div>
+
+            <div class="detail-info">
+                <div class="detail-header">
+                    <h1 th:text="${item.title}">물건 제목</h1>
+                    <span class="status"
+                          th:classappend="${item.status.name() == 'RECRUITING' ? 'active' :
+                                         (item.status.name() == 'AUCTION_STARTED' ? 'active' :
+                                         (item.status.name() == 'AUCTION_ENDED' ? 'ended' : 'sold'))}"
+                          th:text="${item.status.name() == 'RECRUITING' ? '참여자 모집중' :
+                                   (item.status.name() == 'AUCTION_STARTED' ? '경매 진행중' :
+                                   (item.status.name() == 'AUCTION_ENDED' ? '경매 종료' :
+                                   (item.status.name() == 'SOLD' ? '판매완료' : '삭제됨')))}">
+                        참여자 모집중
+                    </span>
+                </div>
+
+                <div class="price-info">
+                    <div class="current-price">
+                        <span>현재가</span>
+                        <strong th:text="${#numbers.formatInteger(item.currentPrice, 0, 'COMMA')} + '원'">0원</strong>
+                    </div>
+                    <div class="start-price">
+                        <span>시작가: </span>
+                        <span th:text="${#numbers.formatInteger(item.startPrice, 0, 'COMMA')} + '원'">0원</span>
+                    </div>
+                </div>
+
+                <div class="item-meta">
+                    <p><strong>판매자:</strong> <span th:text="${item.seller.username}">판매자</span></p>
+                    <p><strong>등록일:</strong> <span th:text="${#temporals.format(item.createdAt, 'yyyy-MM-dd HH:mm')}">2024-01-01 00:00</span></p>
+                    <p th:if="${item.recruitmentEndTime != null}"><strong>모집 종료:</strong> <span th:text="${#temporals.format(item.recruitmentEndTime, 'yyyy-MM-dd HH:mm')}">2024-01-01 00:00</span></p>
+                    <p th:if="${item.auctionStartTime != null}"><strong>경매 시작:</strong> <span th:text="${#temporals.format(item.auctionStartTime, 'yyyy-MM-dd HH:mm')}">2024-01-01 00:00</span></p>
+                    <p><strong>경매 종료:</strong> <span th:text="${#temporals.format(item.endTime, 'yyyy-MM-dd HH:mm')}">2024-01-01 00:00</span></p>
+                </div>
+
+                <div class="description">
+                    <h3>상품 설명</h3>
+                    <p th:text="${item.description}">상품 설명입니다.</p>
+                </div>
+
+                <!-- 판매자인 경우 수정/삭제 버튼 표시 -->
+                <div th:if="${isSeller}" class="action-buttons">
+                    <a th:href="@{/items/{id}/edit(id=${item.id})}" class="btn btn-primary">수정하기</a>
+                    <button class="btn btn-danger" onclick="deleteItem()">삭제하기</button>
+                </div>
+
+                <!-- 판매자가 아니고 참여 모집 중인 경우 참여 버튼 표시 -->
+                <div th:if="${!isSeller and item.status.name() == 'RECRUITING'}" class="action-buttons" sec:authorize="isAuthenticated()">
+                    <button id="joinButton" class="btn btn-success" onclick="joinAuction()">경매 참여하기</button>
+                </div>
+
+                <!-- 경매 진행 중인 경우 경매방 입장 버튼 -->
+                <div th:if="${item.status.name() == 'AUCTION_STARTED'}" class="action-buttons" sec:authorize="isAuthenticated()">
+                    <a th:href="@{/auctions/room/{id}(id=${item.id})}" class="btn btn-primary">경매방 입장</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+    <script th:inline="javascript">
+        const contextPath = /*[[@{/}]]*/ '';
+        const basePath = contextPath.endsWith('/') ? contextPath.slice(0, -1) : contextPath;
+        const itemId = /*[[${item.id}]]*/ 0;
+
+        // 경매 참여하기
+        async function joinAuction() {
+            if (!confirm('이 경매에 참여하시겠습니까?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(basePath + '/api/auctions/' + itemId + '/join', {
+                    method: 'POST'
+                });
+
+                const message = await response.text();
+
+                if (response.ok) {
+                    alert(message);
+                    window.location.reload();
+                } else {
+                    alert('참여 실패: ' + message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('오류가 발생했습니다.');
+            }
+        }
+
+        // 물건 삭제하기
+        async function deleteItem() {
+            if (!confirm('정말로 이 물건을 삭제하시겠습니까?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(basePath + '/api/items/' + itemId, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    alert('물건이 삭제되었습니다.');
+                    window.location.href = basePath + '/items';
+                } else {
+                    const error = await response.text();
+                    alert('삭제 실패: ' + error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('오류가 발생했습니다.');
+            }
+        }
+    </script>
+</body>
+</html>

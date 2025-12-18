@@ -6,22 +6,13 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
-import com.auction.auction.filter.JwtAuthenticationFilter;
-
-import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableWebSecurity
-@RequiredArgsConstructor
 public class SecurityConfig {
-
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -36,25 +27,37 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) // JWT 사용으로 CSRF 비활성화
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // 세션 사용 안 함 (JWT 기반)
+            .csrf(csrf -> csrf
+                .ignoringRequestMatchers("/api/**") // API는 CSRF 제외 (나중에 필요시 사용)
             )
             .authorizeHttpRequests(auth -> auth
-                // 정적 리소스는 모두 허용
-                .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
-                // 회원가입, 로그인 API는 모두 허용
-                .requestMatchers("/api/users/signup", "/api/users/login").permitAll()
-                // 모든 HTML 페이지는 접근 허용 (JWT는 JavaScript에서 확인)
-                .requestMatchers("/**/*.html", "/").permitAll()
-                // API는 인증 필요
-                .requestMatchers("/api/**").authenticated()
-                // 나머지는 허용
-                .anyRequest().permitAll()
+                // 정적 리소스 허용
+                .requestMatchers("/css/**", "/js/**", "/images/**", "/uploads/**").permitAll()
+                // WebSocket 엔드포인트 허용
+                .requestMatchers("/ws-auction/**").permitAll()
+                .requestMatchers("/webjars/**").permitAll()
+                // 공개 페이지
+                .requestMatchers("/", "/signup", "/login").permitAll()
+                .requestMatchers("/items", "/items/**").permitAll()
+                // 물건 등록은 인증 필요
+                .requestMatchers("/items/register").authenticated()
+                // API는 별도 처리 (Thymeleaf에서는 거의 사용 안함)
+                .requestMatchers("/api/**").permitAll()
+                // 나머지는 인증 필요
+                .anyRequest().authenticated()
             )
-            .formLogin(form -> form.disable()) // 폼 로그인 비활성화
-            .httpBasic(basic -> basic.disable()) // HTTP Basic 비활성화
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // JWT 필터 추가
+            .formLogin(form -> form
+                .loginPage("/login")
+                .loginProcessingUrl("/login")
+                .defaultSuccessUrl("/", true)
+                .failureUrl("/login?error=true")
+                .permitAll()
+            )
+            .logout(logout -> logout
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/")
+                .permitAll()
+            );
 
         return http.build();
     }
