@@ -1,22 +1,39 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head th:replace="~{fragments/layout :: head('내 경매방 - 중고경매')}"></head>
+<head th:replace="~{fragments/layout :: head(#{auction.rooms.title} + ' - ' + #{app.title})}"></head>
 <body>
     <div th:replace="~{fragments/layout :: navbar}"></div>
 
     <div class="container">
-        <h1 class="section-title mt-4">내 경매방</h1>
-        <p class="text-muted mb-4">참여 중인 경매 목록입니다.</p>
+        <h1 class="section-title mt-4" th:text="#{auction.rooms.title}">내 경매방</h1>
+        <p class="text-muted mb-4" th:text="#{auction.rooms.description}">참여 중인 경매 목록입니다.</p>
 
         <div id="auctionRoomsContainer">
-            <p class="text-center">로딩 중...</p>
+            <p class="text-center" th:text="#{items.loading}">로딩 중...</p>
         </div>
     </div>
 
     <footer th:replace="~{fragments/layout :: footer}"></footer>
 
     <script th:inline="javascript">
+        // i18n 메시지를 JavaScript 변수로 전달
+        const i18n = {
+            loading: /*[[#{items.loading}]]*/ '로딩 중...',
+            noAuctions: /*[[#{auction.rooms.no.auctions}]]*/ '참여 중인 경매가 없습니다',
+            leave: /*[[#{auction.rooms.leave}]]*/ '나가기',
+            enter: /*[[#{auction.rooms.enter}]]*/ '경매방 입장',
+            startPrice: /*[[#{auction.start.price}]]*/ '시작가',
+            currentPrice: /*[[#{auction.current.price}]]*/ '현재가',
+            recruiting: /*[[#{auction.status.recruiting}]]*/ '모집 중',
+            started: /*[[#{auction.status.started}]]*/ '경매 진행 중',
+            ended: /*[[#{auction.status.ended}]]*/ '경매 종료',
+            won: /*[[#{auction.status.won}]]*/ '낙찰 받음',
+            sold: /*[[#{auction.status.sold}]]*/ '판매 완료',
+            deleted: /*[[#{auction.status.deleted}]]*/ '삭제됨',
+            timeEnded: /*[[#{auction.time.ended}]]*/ '종료'
+        };
+
         const contextPath = /*[[@{/}]]*/ '';
         const basePath = contextPath.endsWith('/') ? contextPath.slice(0, -1) : contextPath;
 
@@ -31,7 +48,7 @@
                 const container = document.getElementById('auctionRoomsContainer');
 
                 if (participants.length === 0) {
-                    container.innerHTML = '<p class="text-center text-muted">참여 중인 경매가 없습니다.</p>';
+                    container.innerHTML = `<p class="text-center text-muted">${i18n.noAuctions}</p>`;
                     return;
                 }
 
@@ -55,13 +72,13 @@
                                 <div class="card-body">
                                     <h5 class="card-title">${item.title}</h5>
                                     <p class="card-text text-muted" style="font-size: 0.9rem;">${item.description.substring(0, 100)}${item.description.length > 100 ? '...' : ''}</p>
-                                    <p class="mb-1"><strong>시작가:</strong> ${item.startPrice.toLocaleString()}원</p>
-                                    <p class="mb-1"><strong>현재가:</strong> ${item.currentPrice.toLocaleString()}원</p>
+                                    <p class="mb-1"><strong>${i18n.startPrice}:</strong> ${item.startPrice.toLocaleString()}원</p>
+                                    <p class="mb-1"><strong>${i18n.currentPrice}:</strong> ${item.currentPrice.toLocaleString()}원</p>
                                     <p class="mb-3"><span class="badge ${statusClass}">${status}</span></p>
                                     ${item.status === 'AUCTION_STARTED' ?
-                                        `<a href="${basePath}/auctions/room/${item.id}" class="btn btn-primary w-100">경매방 입장</a>` :
+                                        `<a href="${basePath}/auctions/room/${item.id}" class="btn btn-primary w-100">${i18n.enter}</a>` :
                                         item.status === 'RECRUITING' ?
-                                        `<button class="btn btn-secondary w-100" disabled>모집 중 (${formatTime(item.recruitmentEndTime)})</button>` :
+                                        `<button class="btn btn-secondary w-100" disabled>${i18n.recruiting} (${formatTime(item.recruitmentEndTime)})</button>` :
                                         `<button class="btn btn-secondary w-100" disabled>${status}</button>`
                                     }
                                 </div>
@@ -69,7 +86,7 @@
                                 <button onclick="leaveAuction(${item.id})"
                                         class="btn btn-sm btn-danger delete-room-btn"
                                         style="position: absolute; top: 10px; right: 10px; z-index: 10;">
-                                    나가기
+                                    ${i18n.leave}
                                 </button>
                             </div>
                         </div>
@@ -87,14 +104,14 @@
 
         function getStatusText(status, isWinner) {
             if (status === 'AUCTION_ENDED' && isWinner) {
-                return '낙찰 받음';
+                return i18n.won;
             }
             const statusMap = {
-                'RECRUITING': '모집 중',
-                'AUCTION_STARTED': '경매 진행 중',
-                'AUCTION_ENDED': '경매 종료',
-                'SOLD': '판매 완료',
-                'DELETED': '삭제됨'
+                'RECRUITING': i18n.recruiting,
+                'AUCTION_STARTED': i18n.started,
+                'AUCTION_ENDED': i18n.ended,
+                'SOLD': i18n.sold,
+                'DELETED': i18n.deleted
             };
             return statusMap[status] || status;
         }
@@ -118,7 +135,7 @@
             const now = new Date();
             const diff = date - now;
 
-            if (diff < 0) return '종료';
+            if (diff < 0) return i18n.timeEnded;
 
             const minutes = Math.floor(diff / 60000);
             const seconds = Math.floor((diff % 60000) / 1000);

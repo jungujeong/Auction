@@ -1,46 +1,46 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head th:replace="~{fragments/layout :: head('물건 등록 - 중고경매')}"></head>
+<head th:replace="~{fragments/layout :: head(#{register.title} + ' - ' + #{app.title})}"></head>
 <body>
     <div th:replace="~{fragments/layout :: navbar}"></div>
 
     <div class="container">
         <div class="form-container mt-4">
-            <h1 class="section-title">물건 등록</h1>
+            <h1 class="section-title" th:text="#{register.title}">물건 등록</h1>
 
             <form id="registerForm" enctype="multipart/form-data">
                 <div class="form-group">
-                    <label for="title">제목 *</label>
+                    <label for="title"><span th:text="#{register.item.title}">제목</span> *</label>
                     <input type="text" id="title" name="title" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="description">설명 *</label>
+                    <label for="description"><span th:text="#{register.description}">설명</span> *</label>
                     <textarea id="description" name="description" rows="5" required></textarea>
                 </div>
 
                 <div class="form-group">
-                    <label for="startPrice">시작가 (원) *</label>
+                    <label for="startPrice"><span th:text="#{register.start.price.hint}">시작가 (원)</span> *</label>
                     <input type="number" id="startPrice" name="startPrice" min="0" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="endTime">종료 일시 *</label>
+                    <label for="endTime"><span th:text="#{register.end.time}">종료 일시</span> *</label>
                     <input type="datetime-local" id="endTime" name="endTime" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="image">이미지</label>
+                    <label for="image" th:text="#{register.image}">이미지</label>
                     <input type="file" id="image" name="image" accept="image/*" onchange="previewImage(event)">
                     <div id="imagePreview" style="margin-top: 1rem; display: none;">
-                        <img id="preview" src="" alt="미리보기" style="max-width: 100%; max-height: 300px; border-radius: 8px; border: 1px solid #ddd;">
+                        <img id="preview" src="" th:alt="#{register.image.preview}" style="max-width: 100%; max-height: 300px; border-radius: 8px; border: 1px solid #ddd;">
                     </div>
                 </div>
 
                 <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">등록하기</button>
-                    <a th:href="@{/}" class="btn btn-secondary">취소</a>
+                    <button type="submit" class="btn btn-primary" th:text="#{register.submit}">등록하기</button>
+                    <a th:href="@{/}" class="btn btn-secondary" th:text="#{register.cancel}">취소</a>
                 </div>
             </form>
         </div>
@@ -49,6 +49,15 @@
     <footer th:replace="~{fragments/layout :: footer}"></footer>
 
     <script th:inline="javascript">
+        // i18n 메시지를 JavaScript 변수로 전달
+        const i18n = {
+            success: /*[[#{register.success}]]*/ '물건이 등록되었습니다.',
+            error: /*[[#{register.error}]]*/ '등록 실패',
+            imageUploadError: /*[[#{register.image.upload.error}]]*/ '이미지 업로드에 실패했습니다.',
+            imageUploadException: /*[[#{register.image.upload.exception}]]*/ '이미지 업로드 중 오류가 발생했습니다.',
+            exception: /*[[#{register.exception}]]*/ '오류가 발생했습니다.'
+        };
+
         const contextPath = /*[[@{/}]]*/ '';
         // contextPath에는 이미 '/auction/'이 포함되어 있으므로 마지막 /를 제거
         const basePath = contextPath.endsWith('/') ? contextPath.slice(0, -1) : contextPath;
@@ -93,12 +102,12 @@
                         const result = await uploadResponse.json();
                         imageUrl = result.url;
                     } else {
-                        alert('이미지 업로드에 실패했습니다.');
+                        alert(i18n.imageUploadError);
                         return;
                     }
                 } catch (error) {
                     console.error('Error uploading image:', error);
-                    alert('이미지 업로드 중 오류가 발생했습니다.');
+                    alert(i18n.imageUploadException);
                     return;
                 }
             }
@@ -122,15 +131,15 @@
                 });
 
                 if (response.ok) {
-                    alert('물건이 등록되었습니다.');
+                    alert(i18n.success);
                     window.location.href = basePath + '/items';
                 } else {
                     const error = await response.text();
-                    alert('등록 실패: ' + error);
+                    alert(i18n.error + ': ' + error);
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('오류가 발생했습니다.');
+                alert(i18n.exception);
             }
         });
 

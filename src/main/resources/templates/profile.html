@@ -1,63 +1,62 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head th:replace="~{fragments/layout :: head('프로필 - 중고경매')}"></head>
+<head th:replace="~{fragments/layout :: head(#{profile.title} + ' - ' + #{app.title})}"></head>
 <body>
     <div th:replace="~{fragments/layout :: navbar}"></div>
 
     <div class="container">
         <div class="form-container mt-4">
-            <h1 class="section-title">내 프로필</h1>
+            <h1 class="section-title" th:text="#{profile.title}">내 프로필</h1>
 
             <form id="profileForm">
                 <div class="form-group">
-                    <label for="username">아이디</label>
+                    <label for="username" th:text="#{profile.username}">아이디</label>
                     <input type="text" id="username" th:value="${user.username}" readonly
                            style="background-color: #e9ecef; cursor: not-allowed;">
-                    <small>아이디는 변경할 수 없습니다.</small>
+                    <small th:text="#{profile.username} + ' is read-only'">아이디는 변경할 수 없습니다.</small>
                 </div>
 
                 <div class="form-group">
-                    <label for="email">이메일 *</label>
+                    <label for="email"><span th:text="#{profile.email}">이메일</span> *</label>
                     <input type="email" id="email" name="email" th:value="${user.email}" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="name">이름</label>
+                    <label for="name" th:text="#{profile.name}">이름</label>
                     <input type="text" id="name" th:value="${user.name}" readonly
                            style="background-color: #e9ecef; cursor: not-allowed;">
-                    <small>이름은 변경할 수 없습니다.</small>
+                    <small th:text="#{profile.name.readonly}">이름은 변경할 수 없습니다.</small>
                 </div>
 
                 <div class="form-group">
-                    <label for="balance">계좌 잔액 *</label>
+                    <label for="balance"><span th:text="#{profile.balance}">계좌 잔액</span> *</label>
                     <input type="number" id="balance" name="balance" th:value="${user.balance}" min="0" required>
-                    <small>현재 잔액을 수정할 수 있습니다. (실제 서비스에서는 입금 기능으로 대체)</small>
+                    <small th:text="#{profile.balance.hint}">현재 잔액을 수정할 수 있습니다. (실제 서비스에서는 입금 기능으로 대체)</small>
                 </div>
 
                 <hr style="margin: 2rem 0; border: none; border-top: 1px solid #dee2e6;">
 
-                <h3 style="font-size: 1.25rem; font-weight: 600; color: #212529; margin-bottom: 1.5rem;">비밀번호 변경</h3>
-                <small style="display: block; color: #6c757d; margin-bottom: 1rem;">비밀번호를 변경하지 않으려면 아래 필드를 비워두세요.</small>
+                <h3 style="font-size: 1.25rem; font-weight: 600; color: #212529; margin-bottom: 1.5rem;" th:text="#{profile.password.change}">비밀번호 변경</h3>
+                <small style="display: block; color: #6c757d; margin-bottom: 1rem;" th:text="#{profile.password.change.hint}">비밀번호를 변경하지 않으려면 아래 필드를 비워두세요.</small>
 
                 <div class="form-group">
-                    <label for="currentPassword">현재 비밀번호</label>
+                    <label for="currentPassword" th:text="#{profile.current.password}">현재 비밀번호</label>
                     <input type="password" id="currentPassword" name="currentPassword">
-                    <small>비밀번호를 변경하려면 현재 비밀번호를 입력하세요.</small>
                 </div>
 
                 <div class="form-group">
-                    <label for="newPassword">새 비밀번호</label>
+                    <label for="newPassword" th:text="#{profile.new.password}">새 비밀번호</label>
                     <input type="password" id="newPassword" name="newPassword">
                 </div>
 
                 <div class="form-group">
-                    <label for="confirmPassword">새 비밀번호 확인</label>
+                    <label for="confirmPassword" th:text="#{profile.new.password.confirm}">새 비밀번호 확인</label>
                     <input type="password" id="confirmPassword" name="confirmPassword">
                 </div>
 
                 <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">저장하기</button>
+                    <button type="submit" class="btn btn-primary" th:text="#{profile.submit}">저장하기</button>
                     <a th:href="@{/}" class="btn btn-secondary">취소</a>
                 </div>
             </form>

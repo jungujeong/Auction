@@ -1,20 +1,20 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head th:replace="~{fragments/layout :: head('중고경매')}"></head>
+<head th:replace="~{fragments/layout :: head(#{app.title})}"></head>
 <body>
     <div th:replace="~{fragments/layout :: navbar}"></div>
 
     <div class="hero-section">
         <div class="container">
-            <h1>중고 물건을 경매로 사고 팔아보세요!</h1>
-            <p>안전하고 투명한 온라인 경매 플랫폼</p>
-            <a th:href="@{/items}" class="btn btn-primary btn-lg">경매 둘러보기</a>
+            <h1 th:text="#{page.main.hero.title}">중고 물건을 경매로 사고 팔아보세요!</h1>
+            <p th:text="#{page.main.hero.subtitle}">안전하고 투명한 온라인 경매 플랫폼</p>
+            <a th:href="@{/items}" class="btn btn-primary btn-lg" th:text="#{page.main.hero.browse}">경매 둘러보기</a>
         </div>
     </div>
 
     <div class="container">
-        <h2 class="section-title">진행 중인 경매</h2>
+        <h2 class="section-title" th:text="#{page.main.ongoing}">진행 중인 경매</h2>
 
         <div class="grid" th:if="${items != null and !items.isEmpty()}">
             <div class="item-card" th:each="item : ${items}"
@@ -45,7 +45,7 @@
             </div>
         </div>
 
-        <p class="text-center" th:if="${items == null or items.isEmpty()}">
+        <p class="text-center" th:if="${items == null or items.isEmpty()}" th:text="#{items.no.items}">
             등록된 경매가 없습니다.
         </p>
     </div>

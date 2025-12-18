@@ -1,11 +1,18 @@
 package com.auction.auction.config;
 
+import java.util.Locale;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.LocaleResolver;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
+import org.springframework.web.servlet.i18n.SessionLocaleResolver;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
@@ -14,6 +21,28 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Value("${file.upload-dir}")
     private String uploadDir;
+
+    /**
+     * LocaleResolver 설정
+     * 세션에 언어 정보를 저장하고, 기본 언어는 한국어로 설정
+     */
+    @Bean
+    public LocaleResolver localeResolver() {
+        SessionLocaleResolver resolver = new SessionLocaleResolver();
+        resolver.setDefaultLocale(Locale.KOREAN);
+        return resolver;
+    }
+
+    /**
+     * LocaleChangeInterceptor 설정
+     * URL 파라미터 'lang'으로 언어 변경 가능 (예: ?lang=en, ?lang=ko)
+     */
+    @Bean
+    public LocaleChangeInterceptor localeChangeInterceptor() {
+        LocaleChangeInterceptor interceptor = new LocaleChangeInterceptor();
+        interceptor.setParamName("lang");
+        return interceptor;
+    }
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
@@ -40,5 +69,14 @@ public class WebConfig implements WebMvcConfigurer {
                     "classpath:/META-INF/resources/webjars/",
                     "classpath:/webjars/")
                 .resourceChain(false);
+    }
+
+    /**
+     * Interceptor 등록
+     * LocaleChangeInterceptor를 추가하여 언어 변경 처리
+     */
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(localeChangeInterceptor());
     }
 }

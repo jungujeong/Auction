@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/layout :: head('경매 목록 - 중고경매')}"></head>
+<head th:replace="~{fragments/layout :: head(#{items.title} + ' - ' + #{app.title})}"></head>
 <body>
     <div th:replace="~{fragments/layout :: navbar}"></div>
 
     <div class="container">
-        <h1 class="section-title mt-4">경매 목록</h1>
+        <h1 class="section-title mt-4" th:text="#{items.title}">경매 목록</h1>
 
         <div class="grid" th:if="${items != null and !items.isEmpty()}">
             <div class="item-card" th:each="item : ${items}"
@@ -36,7 +36,7 @@
             </div>
         </div>
 
-        <p class="text-center" th:if="${items == null or items.isEmpty()}">
+        <p class="text-center" th:if="${items == null or items.isEmpty()}" th:text="#{items.no.items}">
             등록된 경매가 없습니다.
         </p>
     </div>
